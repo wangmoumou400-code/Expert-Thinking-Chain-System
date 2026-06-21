@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CPS专家反馈系统</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div>
+        <h1>CPS专家反馈系统</h1>
+        <p>用于普通毛绒兔子产品改进任务。请按实验材料编号提交内容。</p>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="grid">
+        <label>
+          被试编号
+          <input id="participantId" autocomplete="off" placeholder="例如 B01、C01、D01">
+        </label>
+        <label>
+          材料编号
+          <select id="materialCode">
+            <option value="B">材料B</option>
+            <option value="C">材料C</option>
+            <option value="D">材料D</option>
+          </select>
+        </label>
+      </div>
+
+      <label>
+        反馈前CPS内容 / 反馈前完整方案
+        <textarea id="draft" rows="14" placeholder="请粘贴被试在任务一中完成的反馈前CPS内容，或反馈前完整方案。"></textarea>
+      </label>
+
+      <div class="actions">
+        <button id="generate">生成反馈</button>
+        <button id="clear" type="button" class="secondary">清空</button>
+      </div>
+    </section>
+
+    <section class="panel output">
+      <div class="output-head">
+        <div>
+          <h2>反馈结果</h2>
+          <p id="meta">等待生成反馈。</p>
+        </div>
+        <div class="timer" id="timer">00:00</div>
+      </div>
+      <pre id="result">请先提交反馈前方案。</pre>
+      <div class="actions">
+        <button id="copy" type="button" class="secondary">复制反馈</button>
+        <button id="complete" type="button" class="ghost" disabled>完成阅读并记录</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
