@@ -3,11 +3,22 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabaseTable = process.env.SUPABASE_TABLE || 'feedback_records';
 
 export async function saveFeedbackRecord(record) {
-  if (!supabaseUrl || !supabaseKey) {
-    return { enabled: false, saved: false };
+  const missing = [];
+
+  if (!supabaseUrl) missing.push('SUPABASE_URL');
+  if (!supabaseKey) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+
+  if (missing.length > 0) {
+    throw new Error(`Supabase环境变量缺失：${missing.join(', ')}`);
   }
 
-  const response = await fetch(`${supabaseUrl.replace(/\/$/, '')}/rest/v1/${supabaseTable}`, {
+  if (!supabaseUrl.startsWith('https://')) {
+    throw new Error('SUPABASE_URL格式不正确，应类似 https://xxxx.supabase.co');
+  }
+
+  const endpoint = `${supabaseUrl.replace(/\/$/, '')}/rest/v1/${supabaseTable}`;
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers: {
       apikey: supabaseKey,
@@ -32,8 +43,8 @@ export async function saveFeedbackRecord(record) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Supabase 保存失败: ${response.status} ${errorText}`);
+    throw new Error(`Supabase保存失败：${response.status} ${errorText}`);
   }
 
-  return { enabled: true, saved: true };
+  return { saved: true };
 }
