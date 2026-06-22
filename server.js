@@ -206,9 +206,17 @@ const server = http.createServer(async (req, res) => {
 
     await serveStatic(req, res);
   } catch (error) {
-    sendJson(res, 500, {
-      error: error.message || String(error)
-    });
+  sendJson(res, 200, {
+  recordId,
+  materialCode,
+  condition,
+  conditionLabel: conditionLabel[materialCode],
+  model: evaluationResult.model,
+  mock: Boolean(evaluationResult.mock),
+  feedback: displayedFeedback,
+  saved,
+  saveError
+});
   }
 });
 
