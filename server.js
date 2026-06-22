@@ -128,6 +128,9 @@ async function handleFeedback(req, res) {
 let saved = false;
 let saveError = '';
 
+let saved = false;
+let saveError = '';
+
 try {
   const saveResult = await saveFeedbackRecord({
     participantId: payload.participantId,
@@ -144,6 +147,10 @@ try {
   });
 
   saved = Boolean(saveResult.saved);
+
+  if (!saveResult.enabled) {
+    saveError = '未读取到 Supabase 环境变量，请检查 SUPABASE_URL 和 SUPABASE_SERVICE_ROLE_KEY，并重新部署 Vercel。';
+  }
 } catch (error) {
   saveError = error.message || String(error);
   console.error('Supabase save error:', saveError);
