@@ -73,6 +73,8 @@ Strict calibration rules:
 - If the idea does not clearly go beyond ordinary plush-toy improvement, Ideate stage_score must be 1 or 2.
 - If the selected idea is not developed into a coherent solution, Develop stage_score must be 1 or 2.
 - If implementation details are mostly absent, Implement stage_score must be 1 or 2.
+- If the draft only lists broad target users, broad scenarios, or broad needs such as fun, cute, beautiful, useful, or convenient, Clarify stage_score must not exceed 2.
+- Do not end the overall comment with direct advice. End with an evaluative summary of the current draft's quality instead.
 
 Before scoring, compare the draft with three baselines:
 1. an ordinary plush rabbit;
