@@ -156,16 +156,17 @@ try {
   console.error('Supabase save error:', saveError);
 }
 
-  sendJson(res, 200, {
-    recordId,
-    materialCode,
-    condition,
-    conditionLabel: conditionLabel[materialCode],
-    model: evaluationResult.model,
-    mock: Boolean(evaluationResult.mock),
-    feedback: displayedFeedback,
-    saved
-  });
+sendJson(res, 200, {
+  recordId,
+  materialCode,
+  condition,
+  conditionLabel: conditionLabel[materialCode],
+  model: evaluationResult.model,
+  mock: Boolean(evaluationResult.mock),
+  feedback: displayedFeedback,
+  saved,
+  saveError
+});
 }
 
 async function handleReadingComplete(req, res) {
