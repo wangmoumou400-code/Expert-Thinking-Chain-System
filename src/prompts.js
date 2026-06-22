@@ -191,6 +191,7 @@ ${draft}
 Return the complete JSON object required by the system prompt.
 All JSON values that will be shown to the participant must be in Simplified Chinese.
 All score fields must be integers.
+The "cmc_reasoning_demo" object is mandatory and must contain six non-empty Chinese strings.
 Apply the strict calibration rules before assigning scores.
 Do not inflate scores for conventional feature combinations.
 `;
