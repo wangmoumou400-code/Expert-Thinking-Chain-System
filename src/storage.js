@@ -1,8 +1,12 @@
-const supabaseUrl = process.env.SUPABASE_URL || '';
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-const supabaseTable = process.env.SUPABASE_TABLE || 'feedback_records';
-
 export async function saveFeedbackRecord(record) {
+  const supabaseUrl = process.env.SUPABASE_URL || '';
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_SECRET_KEY ||
+    '';
+
+  const supabaseTable = process.env.SUPABASE_TABLE || 'feedback_records';
+
   const missing = [];
 
   if (!supabaseUrl) missing.push('SUPABASE_URL');
