@@ -75,6 +75,8 @@ Strict calibration rules:
 - If implementation details are mostly absent, Implement stage_score must be 1 or 2.
 - If the draft only lists broad target users, broad scenarios, or broad needs such as fun, cute, beautiful, useful, or convenient, Clarify stage_score must not exceed 2.
 - Do not end the overall comment with direct advice. End with an evaluative summary of the current draft's quality instead.
+- If a stage score is 3 or 4, the feedback must explicitly state what makes that stage more than basic. If the evidence only shows basic completion, assign 2 rather than 3.
+Avoid broad labels such as “缺乏深度” or “有提升空间” unless the comment explains the exact source of weakness: user-need analysis, interaction mechanism, product coherence, feasibility, safety, or production detail.
 
 Before scoring, compare the draft with three baselines:
 1. an ordinary plush rabbit;
