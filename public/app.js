@@ -20,6 +20,7 @@ function startTimer() {
   stopTimer();
   feedbackOpenedAt = new Date();
   el('timer').textContent = '00:00';
+
   timerHandle = setInterval(() => {
     const elapsed = Math.floor((Date.now() - feedbackOpenedAt.getTime()) / 1000);
     el('timer').textContent = formatSeconds(elapsed);
@@ -40,6 +41,7 @@ async function generateFeedback() {
     el('meta').textContent = '请先填写被试编号。';
     return;
   }
+
   if (!draft) {
     el('meta').textContent = '请先粘贴反馈前CPS内容或反馈前完整方案。';
     return;
@@ -56,16 +58,28 @@ async function generateFeedback() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ participantId, materialCode, draft })
     });
+
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error || '生成失败');
+
+    if (!response.ok) {
+      throw new Error(data.error || '生成失败');
+    }
 
     currentRecord = {
       recordId: data.recordId,
       participantId,
       materialCode
     };
+
     el('result').textContent = data.feedback;
-    el('meta').textContent = `${data.conditionLabel}｜记录编号：${data.recordId}${data.mock ? '｜当前为未配置API的模拟输出' : ''}`;
+
+    const saveText = data.saved ? '成功' : '失败';
+    const saveError = data.saveError ? `｜${data.saveError}` : '';
+    const mockText = data.mock ? '｜当前为未配置API的模拟输出' : '';
+
+    el('meta').textContent =
+      `${data.conditionLabel}｜记录编号：${data.recordId}｜数据库保存：${saveText}${saveError}${mockText}`;
+
     el('complete').disabled = false;
     startTimer();
   } catch (error) {
@@ -82,6 +96,7 @@ function clearForm() {
   stopTimer();
   currentRecord = null;
   feedbackOpenedAt = null;
+
   el('participantId').value = '';
   el('materialCode').value = 'B';
   el('draft').value = '';
@@ -93,6 +108,7 @@ function clearForm() {
 
 async function copyFeedback() {
   await navigator.clipboard.writeText(el('result').textContent);
+
   el('meta').textContent = currentRecord
     ? `反馈已复制｜记录编号：${currentRecord.recordId}`
     : '反馈已复制。';
@@ -100,23 +116,12 @@ async function copyFeedback() {
 
 async function completeReading() {
   if (!currentRecord || !feedbackOpenedAt) return;
-  const completedAt = new Date();
-  const readingSeconds = Math.round((completedAt.getTime() - feedbackOpenedAt.getTime()) / 1000);
 
-  await fetch('/api/reading-complete', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      ...currentRecord,
-      feedbackOpenedAt: feedbackOpenedAt.toISOString(),
-      completedAt: completedAt.toISOString(),
-      readingSeconds
-    })
-  });
+  const readingSeconds = Math.round((Date.now() - feedbackOpenedAt.getTime()) / 1000);
 
   stopTimer();
   el('complete').disabled = true;
-  el('meta').textContent = `已记录阅读完成，用时 ${readingSeconds} 秒。请回到实验材料继续修订。`;
+  el('meta').textContent = `阅读完成，用时 ${readingSeconds} 秒。请回到实验材料继续修订。`;
 }
 
 el('generate').addEventListener('click', generateFeedback);
