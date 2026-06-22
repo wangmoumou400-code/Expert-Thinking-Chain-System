@@ -36,6 +36,7 @@ const mime = {
 
 function loadEnvFile(filePath) {
   if (!existsSync(filePath)) return;
+
   const content = readFileSync(filePath, 'utf8');
 
   for (const rawLine of content.split(/\r?\n/)) {
@@ -125,48 +126,41 @@ async function handleFeedback(req, res) {
 
   const recordId = makeRecordId(materialCode, payload.participantId);
 
-let saved = false;
-let saveError = '';
+  let saved = false;
+  let saveError = '';
 
-let saved = false;
-let saveError = '';
+  try {
+    const saveResult = await saveFeedbackRecord({
+      participantId: payload.participantId,
+      materialCode,
+      condition,
+      conditionLabel: conditionLabel[materialCode],
+      model: evaluationResult.model,
+      promptVersion,
+      inputText: payload.draft || '',
+      feedbackText: displayedFeedback,
+      rawAiOutput: evaluationResult.rawText || '',
+      parsedJson: evaluationResult.parsedJson || null,
+      mock: Boolean(evaluationResult.mock)
+    });
 
-try {
-  const saveResult = await saveFeedbackRecord({
-    participantId: payload.participantId,
+    saved = Boolean(saveResult.saved);
+  } catch (error) {
+    saveError = error.message || String(error);
+    console.error('Supabase save error:', saveError);
+  }
+
+  sendJson(res, 200, {
+    recordId,
     materialCode,
     condition,
     conditionLabel: conditionLabel[materialCode],
     model: evaluationResult.model,
-    promptVersion,
-    inputText: payload.draft || '',
-    feedbackText: displayedFeedback,
-    rawAiOutput: evaluationResult.rawText || '',
-    parsedJson: evaluationResult.parsedJson || null,
-    mock: Boolean(evaluationResult.mock)
+    mock: Boolean(evaluationResult.mock),
+    feedback: displayedFeedback,
+    saved,
+    saveError
   });
-
-  saved = Boolean(saveResult.saved);
-
-  if (!saveResult.enabled) {
-    saveError = '未读取到 Supabase 环境变量，请检查 SUPABASE_URL 和 SUPABASE_SERVICE_ROLE_KEY，并重新部署 Vercel。';
-  }
-} catch (error) {
-  saveError = error.message || String(error);
-  console.error('Supabase save error:', saveError);
-}
-
-sendJson(res, 200, {
-  recordId,
-  materialCode,
-  condition,
-  conditionLabel: conditionLabel[materialCode],
-  model: evaluationResult.model,
-  mock: Boolean(evaluationResult.mock),
-  feedback: displayedFeedback,
-  saved,
-  saveError
-});
 }
 
 async function handleReadingComplete(req, res) {
@@ -214,17 +208,9 @@ const server = http.createServer(async (req, res) => {
 
     await serveStatic(req, res);
   } catch (error) {
-  sendJson(res, 200, {
-  recordId,
-  materialCode,
-  condition,
-  conditionLabel: conditionLabel[materialCode],
-  model: evaluationResult.model,
-  mock: Boolean(evaluationResult.mock),
-  feedback: displayedFeedback,
-  saved,
-  saveError
-});
+    sendJson(res, 500, {
+      error: error.message || String(error)
+    });
   }
 });
 
