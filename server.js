@@ -125,27 +125,29 @@ async function handleFeedback(req, res) {
 
   const recordId = makeRecordId(materialCode, payload.participantId);
 
-  let saved = false;
+let saved = false;
+let saveError = '';
 
-  try {
-    const saveResult = await saveFeedbackRecord({
-      participantId: payload.participantId,
-      materialCode,
-      condition,
-      conditionLabel: conditionLabel[materialCode],
-      model: evaluationResult.model,
-      promptVersion,
-      inputText: payload.draft || '',
-      feedbackText: displayedFeedback,
-      rawAiOutput: evaluationResult.rawText || '',
-      parsedJson: evaluationResult.parsedJson || null,
-      mock: Boolean(evaluationResult.mock)
-    });
+try {
+  const saveResult = await saveFeedbackRecord({
+    participantId: payload.participantId,
+    materialCode,
+    condition,
+    conditionLabel: conditionLabel[materialCode],
+    model: evaluationResult.model,
+    promptVersion,
+    inputText: payload.draft || '',
+    feedbackText: displayedFeedback,
+    rawAiOutput: evaluationResult.rawText || '',
+    parsedJson: evaluationResult.parsedJson || null,
+    mock: Boolean(evaluationResult.mock)
+  });
 
-    saved = Boolean(saveResult.saved);
-  } catch (error) {
-    console.error(error.message || error);
-  }
+  saved = Boolean(saveResult.saved);
+} catch (error) {
+  saveError = error.message || String(error);
+  console.error('Supabase save error:', saveError);
+}
 
   sendJson(res, 200, {
     recordId,
