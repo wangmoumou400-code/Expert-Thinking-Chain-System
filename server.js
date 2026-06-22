@@ -9,7 +9,8 @@ import { renderFeedback } from './src/renderFeedback.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const publicDir = join(__dirname, 'public');
-const recordsDir = join(__dirname, 'records');
+const writableRoot = process.env.VERCEL ? '/tmp' : __dirname;
+const recordsDir = join(writableRoot, 'records');
 const feedbackRecordsFile = join(recordsDir, 'feedback_records.jsonl');
 const readingRecordsFile = join(recordsDir, 'reading_records.jsonl');
 
