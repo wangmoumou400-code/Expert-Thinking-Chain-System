@@ -1,18 +1,15 @@
 import http from 'node:http';
-import { appendFile, mkdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { generateEvaluation } from './src/apiClient.js';
 import { buildMessages, promptVersion } from './src/prompts.js';
 import { renderFeedback } from './src/renderFeedback.js';
+import { saveFeedbackRecord } from './src/storage.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const publicDir = join(__dirname, 'public');
-const writableRoot = process.env.VERCEL ? '/tmp' : __dirname;
-const recordsDir = join(writableRoot, 'records');
-const feedbackRecordsFile = join(recordsDir, 'feedback_records.jsonl');
-const readingRecordsFile = join(recordsDir, 'reading_records.jsonl');
 
 loadEnvFile(join(__dirname, '.env'));
 
@@ -40,30 +37,44 @@ const mime = {
 function loadEnvFile(filePath) {
   if (!existsSync(filePath)) return;
   const content = readFileSync(filePath, 'utf8');
+
   for (const rawLine of content.split(/\r?\n/)) {
     const line = rawLine.trim();
     if (!line || line.startsWith('#')) continue;
+
     const eq = line.indexOf('=');
     if (eq === -1) continue;
+
     const key = line.slice(0, eq).trim();
     const value = line.slice(eq + 1).trim().replace(/^["']|["']$/g, '');
-    if (key && process.env[key] === undefined) process.env[key] = value;
+
+    if (key && process.env[key] === undefined) {
+      process.env[key] = value;
+    }
   }
 }
 
 function sendJson(res, status, data) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.writeHead(status, {
+    'Content-Type': 'application/json; charset=utf-8'
+  });
   res.end(JSON.stringify(data));
 }
 
 async function readBody(req) {
   const chunks = [];
   let size = 0;
+
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 1024 * 1024) throw new Error('提交内容过大，请减少文本长度。');
+
+    if (size > 1024 * 1024) {
+      throw new Error('提交内容过大，请减少文本长度。');
+    }
+
     chunks.push(chunk);
   }
+
   return JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}');
 }
 
@@ -77,50 +88,7 @@ function makeRecordId(materialCode, participantId) {
   return `${stamp}_${materialCode}_${safeParticipant}`;
 }
 
-async function saveFeedbackRecord({ recordId, payload, materialCode, condition, messages, evaluationResult, displayedFeedback, startedAt }) {
-  await mkdir(recordsDir, { recursive: true });
-  const record = {
-    recordId,
-    savedAt: new Date().toISOString(),
-    startedAt,
-    participantId: payload.participantId || '',
-    materialCode,
-    condition,
-    conditionLabel: conditionLabel[materialCode],
-    promptVersion,
-    model: evaluationResult.model,
-    mock: Boolean(evaluationResult.mock),
-    input: {
-      draft: payload.draft || ''
-    },
-    output: {
-      displayedFeedback,
-      rawText: evaluationResult.rawText || '',
-      parsedJson: evaluationResult.parsedJson || null,
-      usage: evaluationResult.usage || null
-    },
-    messages
-  };
-  await appendFile(feedbackRecordsFile, JSON.stringify(record) + '\n', 'utf8');
-}
-
-async function saveReadingRecord(payload) {
-  await mkdir(recordsDir, { recursive: true });
-  const record = {
-    savedAt: new Date().toISOString(),
-    recordId: payload.recordId || '',
-    participantId: payload.participantId || '',
-    materialCode: normalizeMaterialCode(payload.materialCode),
-    condition: conditionMap[normalizeMaterialCode(payload.materialCode)] || '',
-    feedbackOpenedAt: payload.feedbackOpenedAt || '',
-    completedAt: payload.completedAt || '',
-    readingSeconds: Number(payload.readingSeconds || 0)
-  };
-  await appendFile(readingRecordsFile, JSON.stringify(record) + '\n', 'utf8');
-}
-
 async function handleFeedback(req, res) {
-  const startedAt = new Date().toISOString();
   const payload = await readBody(req);
   const materialCode = normalizeMaterialCode(payload.materialCode);
   const condition = conditionMap[materialCode];
@@ -133,25 +101,51 @@ async function handleFeedback(req, res) {
   }
 
   if (!String(payload.draft || '').trim()) {
-    sendJson(res, 400, { error: '请粘贴反馈前CPS内容或反馈前完整方案。' });
+    sendJson(res, 400, {
+      error: '请粘贴反馈前CPS内容或反馈前完整方案。'
+    });
     return;
   }
 
-  const messages = buildMessages({ ...payload, materialCode, condition });
-  const evaluationResult = await generateEvaluation(messages, { materialCode, draft: payload.draft });
-  const displayedFeedback = renderFeedback(condition, evaluationResult.parsedJson);
+  const messages = buildMessages({
+    ...payload,
+    materialCode,
+    condition
+  });
+
+  const evaluationResult = await generateEvaluation(messages, {
+    materialCode,
+    draft: payload.draft
+  });
+
+  const displayedFeedback = renderFeedback(
+    condition,
+    evaluationResult.parsedJson
+  );
+
   const recordId = makeRecordId(materialCode, payload.participantId);
 
-  await saveFeedbackRecord({
-    recordId,
-    payload,
-    materialCode,
-    condition,
-    messages,
-    evaluationResult,
-    displayedFeedback,
-    startedAt
-  });
+  let saved = false;
+
+  try {
+    const saveResult = await saveFeedbackRecord({
+      participantId: payload.participantId,
+      materialCode,
+      condition,
+      conditionLabel: conditionLabel[materialCode],
+      model: evaluationResult.model,
+      promptVersion,
+      inputText: payload.draft || '',
+      feedbackText: displayedFeedback,
+      rawAiOutput: evaluationResult.rawText || '',
+      parsedJson: evaluationResult.parsedJson || null,
+      mock: Boolean(evaluationResult.mock)
+    });
+
+    saved = Boolean(saveResult.saved);
+  } catch (error) {
+    console.error(error.message || error);
+  }
 
   sendJson(res, 200, {
     recordId,
@@ -160,13 +154,13 @@ async function handleFeedback(req, res) {
     conditionLabel: conditionLabel[materialCode],
     model: evaluationResult.model,
     mock: Boolean(evaluationResult.mock),
-    feedback: displayedFeedback
+    feedback: displayedFeedback,
+    saved
   });
 }
 
 async function handleReadingComplete(req, res) {
-  const payload = await readBody(req);
-  await saveReadingRecord(payload);
+  await readBody(req);
   sendJson(res, 200, { ok: true });
 }
 
@@ -184,10 +178,14 @@ async function serveStatic(req, res) {
 
   try {
     const content = await readFile(filePath);
-    res.writeHead(200, { 'Content-Type': mime[extname(filePath)] || 'application/octet-stream' });
+    res.writeHead(200, {
+      'Content-Type': mime[extname(filePath)] || 'application/octet-stream'
+    });
     res.end(content);
   } catch {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.writeHead(404, {
+      'Content-Type': 'text/plain; charset=utf-8'
+    });
     res.end('Not found');
   }
 }
@@ -198,18 +196,20 @@ const server = http.createServer(async (req, res) => {
       await handleFeedback(req, res);
       return;
     }
+
     if (req.method === 'POST' && req.url === '/api/reading-complete') {
       await handleReadingComplete(req, res);
       return;
     }
+
     await serveStatic(req, res);
   } catch (error) {
-    sendJson(res, 500, { error: error.message || String(error) });
+    sendJson(res, 500, {
+      error: error.message || String(error)
+    });
   }
 });
 
 server.listen(port, () => {
   console.log(`CPS CMC expert feedback system: http://localhost:${port}`);
-  console.log(`Feedback records: ${feedbackRecordsFile}`);
-  console.log(`Reading records: ${readingRecordsFile}`);
 });
