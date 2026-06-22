@@ -6,28 +6,40 @@ const STAGE_NAMES = {
 };
 
 function value(obj, path, fallback = '') {
-  return path.split('.').reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj) ?? fallback;
+  return path
+    .split('.')
+    .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj) ?? fallback;
+}
+
+function cleanScore(score) {
+  if (score === undefined || score === null || score === '') return '';
+  return String(score).replace(/[^\d]/g, '');
 }
 
 function scoreLine(evaluation) {
   const scores = evaluation?.scores || {};
+
   return [
-    `整体创造性：${scores.holistic_score ?? ''}/6`,
-    `原创性：${scores.originality_score ?? ''}/7`,
-    `实用性：${scores.usefulness_score ?? ''}/7`,
-    `具体性：${scores.elaboration_score ?? ''}/7`
+    `整体创造性：${cleanScore(scores.holistic_score)}/6`,
+    `原创性：${cleanScore(scores.originality_score)}/7`,
+    `实用性：${cleanScore(scores.usefulness_score)}/7`,
+    `具体性：${cleanScore(scores.elaboration_score)}/7`
   ].join('\n');
 }
 
 function cpsLines(evaluation) {
   const rows = Array.isArray(evaluation?.cps_structure) ? evaluation.cps_structure : [];
-  return rows.map((row) => {
-    const stage = STAGE_NAMES[row.stage] || row.stage || 'CPS阶段';
-    const stageScore = row.stage_score ?? '';
-    const evidence = row.evidence_from_draft || '未呈现';
-    const comment = row.evaluative_comment || '未呈现';
-    return `${stage}：${stageScore}/3\n证据：${evidence}\n评价：${comment}`;
-  }).join('\n\n');
+
+  return rows
+    .map((row) => {
+      const stage = STAGE_NAMES[row.stage] || row.stage || 'CPS阶段';
+      const stageScore = cleanScore(row.stage_score);
+      const evidence = row.evidence_from_draft || '未呈现';
+      const comment = row.evaluative_comment || '未呈现';
+
+      return `${stage}：${stageScore}/4\n证据：${evidence}\n评价：${comment}`;
+    })
+    .join('\n\n');
 }
 
 function qualityLines(evaluation) {
@@ -40,6 +52,7 @@ function qualityLines(evaluation) {
 
 function cmcLines(evaluation) {
   const demo = evaluation?.cmc_reasoning_demo || {};
+
   return [
     demo.evaluation_plan,
     demo.clarify_monitoring,
@@ -47,7 +60,9 @@ function cmcLines(evaluation) {
     demo.develop_monitoring,
     demo.implement_monitoring,
     demo.synthesis
-  ].filter(Boolean).join('\n\n');
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 }
 
 export function renderFeedback(condition, evaluation) {
