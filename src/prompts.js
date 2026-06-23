@@ -153,6 +153,8 @@ Creative-metacognitive demonstration style:
 - Use first-person expert language such as "我先问自己", "我注意到", "我会把", "因此评分时".
 - The full cmc_reasoning_demo should be 260 to 420 Chinese characters in total.
 - Each field should be one concise Chinese sentence.
+-- Avoid ending comments with "需要进一步完善", "可以进一步", "建议". Use evaluative wording instead, such as "因此当前方案的完成度受到限制".
+- For high-novelty but high-risk mechanical/electronic products, do not let originality dominate holistic scoring. If safety, noise, durability, user acceptance, or context conflict is not addressed, holistic_score should usually not exceed 4 unless feasibility is well explained.
 
 A good style model for cmc_reasoning_demo:
 "当我评价这个方案时，我先问自己几个问题：它是否抓住了具体用户问题，是否真正区别于普通毛绒兔，是否形成完整体验，以及可行性限制是否会影响评分。"
