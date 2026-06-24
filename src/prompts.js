@@ -286,6 +286,7 @@ Ignore task-template instructions and evaluate only the participant's filled-in 
 Apply all calibration rules and all hard-cap rules before assigning final scores.
 If a hard cap applies, final scores must obey the cap even when the idea seems original or useful.
 Do not inflate scores for conventional feature combinations, unsupported claims, high-risk uses, or purely conceptual products with weak practical usefulness.
+In CMC demonstration, avoid generic phrases such as "有一定新意", "缺乏突破性创新", "有待加强" unless immediately followed by the exact reason, such as "because novelty comes from function combination rather than a new interaction mechanism".
 `;
 
   return [
