@@ -14,26 +14,20 @@ function cleanScore(score) {
     return '';
   }
 
-  return String(score).replace(/[^\d]/g, '');
+  return String(score)
+    .replace(/[^\d]/g, '');
 }
 
-function cleanText(text, fallback = '未呈现') {
+function cleanText(
+  text,
+  fallback = '未呈现'
+) {
   const cleaned = String(text || '')
     .replace(/\s+/g, ' ')
     .replace(/。{2,}/g, '。')
     .trim();
 
   return cleaned || fallback;
-}
-
-function endSentence(text) {
-  const cleaned = cleanText(text);
-
-  if (/[。！？；]$/.test(cleaned)) {
-    return cleaned;
-  }
-
-  return `${cleaned}。`;
 }
 
 function scoreLines(evaluation) {
@@ -44,10 +38,21 @@ function scoreLines(evaluation) {
     scores.quality_score;
 
   return [
-    `整体创造性：${cleanScore(scores.overall_score)}/6`,
-    `原创性：${cleanScore(scores.originality_score)}/7`,
-    `实用性：${cleanScore(usefulness)}/7`,
-    `具体性：${cleanScore(scores.elaboration_score)}/7`
+    `整体创造性：${cleanScore(
+      scores.overall_score
+    )}/6`,
+
+    `原创性：${cleanScore(
+      scores.originality_score
+    )}/7`,
+
+    `实用性：${cleanScore(
+      usefulness
+    )}/7`,
+
+    `具体性：${cleanScore(
+      scores.elaboration_score
+    )}/7`
   ].join('\n');
 }
 
@@ -65,7 +70,9 @@ function cpsLines(evaluation) {
         row.stage ||
         'CPS阶段';
 
-      const score = cleanScore(row.stage_score);
+      const score = cleanScore(
+        row.stage_score
+      );
 
       const evidence = cleanText(
         row.evidence_from_draft
@@ -84,35 +91,16 @@ function cpsLines(evaluation) {
     .join('\n\n');
 }
 
-function cmcSections(evaluation) {
-  const cmc =
-    evaluation?.cmc_reasoning_demo || {};
-
-  return [
-    '【评价定向】',
-    endSentence(cmc.orientation),
-    '',
-    '【核心自问】',
-    endSentence(cmc.diagnostic_question),
-    '',
-    '【证据监控】',
-    endSentence(cmc.evidence_monitoring),
-    '',
-    '【核心判断】',
-    endSentence(cmc.priority_diagnosis),
-    '',
-    '【调节决策】',
-    endSentence(cmc.control_decision),
-    '',
-    '【再监控】',
-    endSentence(cmc.re_monitoring),
-    '',
-    '【可迁移原则】',
-    endSentence(cmc.transfer_rule)
-  ].join('\n');
+function cmcParagraph(evaluation) {
+  return cleanText(
+    evaluation?.cmc_overall_comment,
+    '当前未生成专家创造力元认知示范。'
+  );
 }
 
-function commonStructuredFeedback(evaluation) {
+function commonStructuredFeedback(
+  evaluation
+) {
   return [
     '【结构化评价结果】',
     scoreLines(evaluation),
@@ -122,7 +110,8 @@ function commonStructuredFeedback(evaluation) {
     '',
     '【总体评价】',
     cleanText(
-      evaluation.structured_overall_comment
+      evaluation
+        .structured_overall_comment
     )
   ].join('\n');
 }
@@ -158,7 +147,7 @@ export function renderFeedback(
   ) {
     return [
       '【专家创造力元认知示范】',
-      cmcSections(evaluation),
+      cmcParagraph(evaluation),
       '',
       commonStructuredFeedback(evaluation)
     ].join('\n');
