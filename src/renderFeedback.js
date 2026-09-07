@@ -5,20 +5,43 @@ const STAGE_NAMES = {
   Implement: 'Implement 形成方案'
 };
 
-function getValue(obj, path, fallback = '') {
-  return path
-    .split('.')
-    .reduce((acc, key) => (acc && acc[key] !== undefined ? acc[key] : undefined), obj) ?? fallback;
-}
-
 function cleanScore(score) {
-  if (score === undefined || score === null || score === '') return '';
+  if (
+    score === undefined ||
+    score === null ||
+    score === ''
+  ) {
+    return '';
+  }
+
   return String(score).replace(/[^\d]/g, '');
 }
 
-function scoreLine(evaluation) {
+function cleanText(text, fallback = '未呈现') {
+  const cleaned = String(text || '')
+    .replace(/\s+/g, ' ')
+    .replace(/。{2,}/g, '。')
+    .trim();
+
+  return cleaned || fallback;
+}
+
+function endSentence(text) {
+  const cleaned = cleanText(text);
+
+  if (/[。！？；]$/.test(cleaned)) {
+    return cleaned;
+  }
+
+  return `${cleaned}。`;
+}
+
+function scoreLines(evaluation) {
   const scores = evaluation?.scores || {};
-  const usefulness = scores.usefulness_score ?? scores.quality_score;
+
+  const usefulness =
+    scores.usefulness_score ??
+    scores.quality_score;
 
   return [
     `整体创造性：${cleanScore(scores.overall_score)}/6`,
@@ -29,89 +52,119 @@ function scoreLine(evaluation) {
 }
 
 function cpsLines(evaluation) {
-  const rows = Array.isArray(evaluation?.cps_structure) ? evaluation.cps_structure : [];
+  const rows = Array.isArray(
+    evaluation?.cps_structure
+  )
+    ? evaluation.cps_structure
+    : [];
 
   return rows
     .map((row) => {
-      const stage = STAGE_NAMES[row.stage] || row.stage || 'CPS阶段';
-      const stageScore = cleanScore(row.stage_score);
-      const evidence = row.evidence_from_draft || '未呈现';
-      const comment = row.evaluative_comment || '未呈现';
-      return `${stage}：${stageScore}/4\n证据：${evidence}\n评价：${comment}`;
+      const stage =
+        STAGE_NAMES[row.stage] ||
+        row.stage ||
+        'CPS阶段';
+
+      const score = cleanScore(row.stage_score);
+
+      const evidence = cleanText(
+        row.evidence_from_draft
+      );
+
+      const comment = cleanText(
+        row.evaluative_comment
+      );
+
+      return [
+        `${stage}：${score}/4`,
+        `证据：${evidence}`,
+        `评价：${comment}`
+      ].join('\n');
     })
     .join('\n\n');
 }
 
-function qualityLines(evaluation) {
+function cmcSections(evaluation) {
+  const cmc =
+    evaluation?.cmc_reasoning_demo || {};
+
   return [
-    `原创性：${getValue(evaluation, 'creative_quality.originality', '未呈现')}`,
-    `实用性：${getValue(evaluation, 'creative_quality.usefulness', getValue(evaluation, 'creative_quality.quality', '未呈现'))}`,
-    `具体性：${getValue(evaluation, 'creative_quality.elaboration', '未呈现')}`
+    '【评价定向】',
+    endSentence(cmc.orientation),
+    '',
+    '【核心自问】',
+    endSentence(cmc.diagnostic_question),
+    '',
+    '【证据监控】',
+    endSentence(cmc.evidence_monitoring),
+    '',
+    '【核心判断】',
+    endSentence(cmc.priority_diagnosis),
+    '',
+    '【调节决策】',
+    endSentence(cmc.control_decision),
+    '',
+    '【再监控】',
+    endSentence(cmc.re_monitoring),
+    '',
+    '【可迁移原则】',
+    endSentence(cmc.transfer_rule)
   ].join('\n');
 }
 
-function cleanSentence(text) {
-  return String(text || '')
-    .replace(/\s+/g, ' ')
-    .replace(/。+/g, '。')
-    .trim();
-}
-
-function cmcLines(evaluation) {
-  const demo = evaluation?.cmc_reasoning_demo || {};
-
-  const parts = [
-    demo.knowledge_activation,
-    demo.evidence_monitoring,
-    demo.bias_control,
-    demo.dimension_distinction,
-    demo.score_calibration
-  ]
-    .map(cleanSentence)
-    .filter(Boolean);
-
-  if (!parts.length) return '';
-
-  return parts
-    .map((part) => (/[。！？]$/.test(part) ? part : `${part}。`))
-    .join('');
-}
-
-export function renderFeedback(condition, evaluation) {
-  if (!evaluation || typeof evaluation !== 'object') {
-    throw new Error('缺少有效的专家评价JSON。');
-  }
-
-  if (condition === 'outcome_only') {
-    return `【结果性评分反馈】\n${scoreLine(evaluation)}`;
-  }
-
-  const structured = [
+function commonStructuredFeedback(evaluation) {
+  return [
     '【结构化评价结果】',
-    scoreLine(evaluation),
+    scoreLines(evaluation),
     '',
     '【CPS阶段评价】',
     cpsLines(evaluation),
     '',
-    '【创造质量评价】',
-    qualityLines(evaluation),
-    '',
     '【总体评价】',
-    evaluation.structured_overall_comment || '未呈现'
+    cleanText(
+      evaluation.structured_overall_comment
+    )
   ].join('\n');
+}
 
-  if (condition === 'structured_feedback') {
-    return structured;
+export function renderFeedback(
+  condition,
+  evaluation
+) {
+  if (
+    !evaluation ||
+    typeof evaluation !== 'object'
+  ) {
+    throw new Error(
+      '缺少有效的专家评价JSON。'
+    );
   }
 
-  if (condition === 'cmc_reasoning_feedback') {
+  if (condition === 'outcome_only') {
     return [
-      '【专家创造力元认知示范】',
-      cmcLines(evaluation) || '未呈现',
-      '',
-      structured
+      '【结果性评分反馈】',
+      scoreLines(evaluation)
     ].join('\n');
   }
 
-  throw new Error(`未知反馈条件：${condition}`);
+  if (condition === 'structured_feedback') {
+    return commonStructuredFeedback(
+      evaluation
+    );
+  }
+
+  if (
+    condition === 'cmc_reasoning_feedback'
+  ) {
+    return [
+      '【专家创造力元认知示范】',
+      cmcSections(evaluation),
+      '',
+      commonStructuredFeedback(evaluation)
+    ].join('\n');
+  }
+
+  throw new Error(
+    `未知反馈条件：${condition}`
+  );
 }
