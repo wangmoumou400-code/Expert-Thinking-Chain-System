@@ -31,7 +31,8 @@ function cleanText(
 }
 
 function scoreLines(evaluation) {
-  const scores = evaluation?.scores || {};
+  const scores =
+    evaluation?.scores || {};
 
   const usefulness =
     scores.usefulness_score ??
@@ -53,6 +54,30 @@ function scoreLines(evaluation) {
     `具体性：${cleanScore(
       scores.elaboration_score
     )}/7`
+  ].join('\n');
+}
+
+function creativeQualityLines(
+  evaluation
+) {
+  const quality =
+    evaluation?.creative_quality || {};
+
+  return [
+    '原创性：',
+    cleanText(
+      quality.originality_judgment
+    ),
+    '',
+    '实用性：',
+    cleanText(
+      quality.usefulness_judgment
+    ),
+    '',
+    '具体性：',
+    cleanText(
+      quality.elaboration_judgment
+    )
   ].join('\n');
 }
 
@@ -105,6 +130,9 @@ function commonStructuredFeedback(
     '【结构化评价结果】',
     scoreLines(evaluation),
     '',
+    '【创造质量判断】',
+    creativeQualityLines(evaluation),
+    '',
     '【CPS阶段评价】',
     cpsLines(evaluation),
     '',
@@ -136,7 +164,9 @@ export function renderFeedback(
     ].join('\n');
   }
 
-  if (condition === 'structured_feedback') {
+  if (
+    condition === 'structured_feedback'
+  ) {
     return commonStructuredFeedback(
       evaluation
     );
@@ -149,7 +179,9 @@ export function renderFeedback(
       '【专家创造力元认知示范】',
       cmcParagraph(evaluation),
       '',
-      commonStructuredFeedback(evaluation)
+      commonStructuredFeedback(
+        evaluation
+      )
     ].join('\n');
   }
 
