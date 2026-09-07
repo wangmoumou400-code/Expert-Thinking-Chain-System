@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CPS专家反馈系统</title>
+  <title>专家反馈系统</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
   <main class="shell">
     <header class="topbar">
       <div>
-        <h1>CPS专家反馈系统</h1>
-        <p>用于普通毛绒兔产品改进任务。请按实验材料编号提交内容。</p>
+        <h1>专家反馈系统</h1>
+        <p>用于普通毛绒兔产品改进任务。请按实验编号提交内容。</p>
       </div>
       <a class="text-link" href="/batch.html">批量验证</a>
     </header>
@@ -23,18 +23,18 @@
           <input id="participantId" autocomplete="off" placeholder="例如 B01、C01、D01">
         </label>
         <label>
-          材料编号
+          组别编号
           <select id="materialCode">
-            <option value="B">材料B</option>
-            <option value="C">材料C</option>
-            <option value="D">材料D</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
           </select>
         </label>
       </div>
 
       <label>
-        反馈前CPS内容 / 反馈前完整方案
-        <textarea id="draft" rows="14" placeholder="请粘贴被试在任务一中完成的反馈前CPS内容，或反馈前完整方案。"></textarea>
+        反馈前CPS内容
+        <textarea id="draft" rows="14" placeholder="请粘贴被试在任务一中完成的内容。"></textarea>
       </label>
 
       <div class="actions">
