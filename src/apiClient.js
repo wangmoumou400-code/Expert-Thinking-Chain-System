@@ -105,12 +105,10 @@ function normalizeScores(scores = {}) {
 
   const overallFallback = Math.round(
     (
-      (
-        usefulness +
-        elaboration +
-        originality
-      ) / 3
-    ) * (6 / 7)
+      usefulness +
+      elaboration +
+      originality
+    ) / 3 * (6 / 7)
   );
 
   return {
@@ -123,39 +121,13 @@ function normalizeScores(scores = {}) {
     ),
 
     /*
-     * Retain quality_score as an internal alias for compatibility
-     * with older storage and export code.
+     * Keep quality_score as an internal alias for compatibility
+     * with existing exports and old records.
      */
     quality_score: usefulness,
     usefulness_score: usefulness,
     elaboration_score: elaboration,
     originality_score: originality
-  };
-}
-
-function normalizeCreativeQuality(
-  quality = {}
-) {
-  return {
-    originality_judgment: cleanText(
-      quality.originality_judgment ??
-        quality.originality,
-      '方案已经呈现一定的改进方向，但核心想法与常见毛绒玩具设计之间的区别程度仍需结合草稿内容判断。'
-    ),
-
-    usefulness_judgment: cleanText(
-      quality.usefulness_judgment ??
-        quality.usefulness ??
-        quality.quality,
-      '方案与任务目标具有一定联系，并呈现了潜在使用价值，但部分功能的实际作用和适用条件尚未充分说明。'
-    ),
-
-    elaboration_judgment: cleanText(
-      quality.elaboration_judgment ??
-        quality.elaboration ??
-        quality.specificity,
-      '方案包含部分功能、结构或使用信息，基本产品方向可以理解，但核心机制及其相互联系的具体程度仍然有限。'
-    )
   };
 }
 
@@ -194,7 +166,7 @@ function normalizeCpsStructure(rows = []) {
 
       evaluative_comment: cleanText(
         row.evaluative_comment,
-        '该阶段已经呈现部分相关信息，但信息的完整性和具体程度有限，因此只能作中等以下判断。'
+        '该阶段已经呈现部分相关信息，但信息的完整性和具体程度有限，因此只能作有限判断。'
       )
     };
   });
@@ -226,7 +198,7 @@ function legacyCmcToParagraph(cmc = {}) {
     return '';
   }
 
-  const fields = [
+  const legacyFields = [
     cmc.orientation ??
       cmc.knowledge_activation,
 
@@ -247,7 +219,7 @@ function legacyCmcToParagraph(cmc = {}) {
   ];
 
   return removeLegacyCmcLabels(
-    fields
+    legacyFields
       .filter(Boolean)
       .map((item) =>
         cleanText(item, '')
@@ -279,13 +251,13 @@ function normalizeCmcOverallComment(
   }
 
   return (
-    '接手这份草稿时，我先明确这个任务既要探索不同方向，也要从中选出兼具新意和使用价值的想法，因此不能只看功能多少或文字长短。' +
-    '现有内容已经呈现若干改进方向，但部分想法沿着相近的功能添加思路展开，说明创意搜索的范围仍然有限。' +
-    '比较候选想法后，有些方向较为具体但接近常见设计，另一些方向具有一定发展空间，却尚未形成清楚机制。' +
-    '由此看来，当前问题不是单纯缺少想法，而是候选想法之间尚未经过充分比较和筛选。' +
-    '因此，我会把策略从继续增加功能调整为分类比较，并根据新颖性、使用价值和发展潜力决定哪些想法继续深化、暂时保留或不再采用。' +
-    '调整后，我会重新检查核心方向是否比常见设计更有区别、是否保留实际价值，以及机制是否足够清楚；若仍未达到这些条件，就继续探索或深化，达到后再结束构思。' +
-    '由此形成的经验是：当想法数量增加但类别不再扩展时，应切换搜索策略；选定有潜力的方向后，再从广泛探索转向持续深化。'
+    '接手这份草稿时，我先明确这个开放性任务既要探索不同方向，也要从中选出兼具新意和使用价值的想法，不能只看功能多少或文字长短。' +
+    '现有内容已经呈现若干改进方向，但还要判断这些方向是否真正覆盖了不同类别，以及创意搜索是否开始重复。' +
+    '比较候选想法时，有些方向较具体但接近常见设计，另一些具有一定发展潜力，却尚未说明到足以判断其作用。' +
+    '由此看来，当前关键在于判断应该继续探索，还是已经出现值得深入发展的方向。' +
+    '因此，我会根据现有想法的区别度、使用价值和发展潜力调整策略，并决定哪些想法继续深化、暂时保留或不再采用。' +
+    '调整后，我会重新检查想法范围是否扩大、选定方向是否兼具新意和价值，以及内容是否足以理解；若仍没有合适方向，就继续探索，达到这些条件后再结束构思。' +
+    '由此形成的经验是：当想法开始重复时，应切换搜索方向；当有潜力的想法出现后，再从广泛探索转向持续深化。'
   );
 }
 
@@ -305,11 +277,6 @@ function normalizeEvaluation(
       normalized.scores || {}
     );
 
-  normalized.creative_quality =
-    normalizeCreativeQuality(
-      normalized.creative_quality || {}
-    );
-
   normalized.cps_structure =
     normalizeCpsStructure(
       normalized.cps_structure
@@ -318,7 +285,7 @@ function normalizeEvaluation(
   normalized.structured_overall_comment =
     cleanText(
       normalized.structured_overall_comment,
-      '方案已经形成基本产品改进方向并呈现一定使用价值；核心想法的区别程度和整体发展完整性仍然有限。'
+      '方案已经形成基本产品改进方向并呈现一定使用价值；核心想法的区别程度和发展完整性仍需结合草稿内容判断。'
     );
 
   normalized.cmc_overall_comment =
@@ -327,10 +294,11 @@ function normalizeEvaluation(
     );
 
   /*
-   * Remove deprecated CMC fields after converting their content
-   * into the new one-paragraph schema.
+   * Convert old CMC output to the single-paragraph field,
+   * then remove deprecated and repetitive sections.
    */
   delete normalized.cmc_reasoning_demo;
+  delete normalized.creative_quality;
 
   const calibration =
     retrieveCalibration(draft);
@@ -354,21 +322,11 @@ function mockEvaluation(context = {}) {
       elaboration_score: 4
     },
 
-    creative_quality: {
-      originality_judgment:
-        '方案包含若干与任务相关的改进方向，但核心想法主要表现为常见功能的组合，区别程度处于中等以下水平。',
-
-      usefulness_judgment:
-        '方案能够回应部分使用需要，也呈现了潜在使用价值，但功能作用和具体适用条件尚未得到充分说明。',
-
-      elaboration_judgment:
-        '方案已经提供部分功能和结构信息，基本方向可以理解，但核心机制、使用过程及要素联系仍不够充分。'
-    },
-
     cps_structure: [
       {
         stage: 'Clarify',
         stage_score: 2,
+
         evidence_from_draft:
           '草稿呈现了部分用户、场景或需要信息。',
 
@@ -378,37 +336,40 @@ function mockEvaluation(context = {}) {
       {
         stage: 'Ideate',
         stage_score: 2,
+
         evidence_from_draft:
           '草稿提出了若干与毛绒兔有关的改进方向。',
 
         evaluative_comment:
-          '想法数量达到基本要求，也包含一定方向差异，但部分内容属于相近的功能添加，发散范围和类别跨度较为有限。'
+          '想法数量达到基本要求，也包含一定方向差异，但部分内容属于相近类型的改进，类别跨度和发散程度较为有限。'
       },
       {
         stage: 'Develop',
         stage_score: 2,
+
         evidence_from_draft:
           '草稿选择了一个或多个主要方向继续发展。',
 
         evaluative_comment:
-          '主要设计方向可以识别，但选择依据、核心机制和完整使用过程尚不充分，方案发展仍处于初步水平。'
+          '主要设计方向可以识别，但选择依据以及与该设计类型相匹配的核心机制尚不充分，方案仍处于初步发展水平。'
       },
       {
         stage: 'Implement',
         stage_score: 2,
+
         evidence_from_draft:
           '草稿提供了少量材料、结构或实现信息。',
 
         evaluative_comment:
-          '最终方案已经具有初步产品形态，但关键操作、结构联系和基本可行性信息仍然有限，具体化程度一般。'
+          '最终方案已经具有初步产品形态，但与其设计类型相关的关键结构、作用方式或实施信息仍然有限。'
       }
     ],
 
     structured_overall_comment:
-      '方案已形成与任务相关的基本改进方向，并呈现一定潜在价值；核心创意的区别程度和整体发展完整性仍然有限。',
+      '方案已形成与任务相关的基本改进方向，并呈现一定潜在价值；核心想法的区别程度和发展完整性仍然有限。',
 
     cmc_overall_comment:
-      '接手这份草稿时，我先明确这个任务既要探索不同方向，也要从中选出兼具新意和使用价值的想法，因此不能只看功能多少或文字长短。现有内容已经呈现若干改进方向，但部分想法沿着相近的功能添加思路展开，说明创意搜索的范围仍然有限。比较候选想法后，有些方向较具体但接近常见设计，另一些具有一定发展空间，却尚未形成清楚机制。由此看来，当前问题不是单纯缺少想法，而是候选想法之间尚未经过充分比较和筛选。因此，我会把策略从继续增加功能调整为分类比较，并根据新颖性、使用价值和发展潜力决定哪些想法继续深化、暂时保留或不再采用。调整后，我会重新检查核心方向是否更有区别、是否保留实际价值，以及机制是否足够清楚；若仍未达到这些条件，就继续探索或深化，达到后再结束构思。由此形成的经验是：当想法数量增加但类别不再扩展时，应切换搜索策略；选定有潜力的方向后，再从广泛探索转向持续深化。'
+      '接手这份草稿时，我先明确这个开放性任务既要探索不同方向，也要从中选出兼具新意和使用价值的想法，不能只看功能多少或文字长短。现有内容已经呈现若干改进方向，但还要判断这些方向是否真正覆盖了不同类别，以及创意搜索是否开始重复。比较候选想法时，有些方向较具体但接近常见设计，另一些具有一定发展潜力，却尚未说明到足以判断其作用。由此看来，当前关键在于判断应该继续探索，还是已经出现值得深入发展的方向。因此，我会根据现有想法的区别度、使用价值和发展潜力调整策略，并决定哪些想法继续深化、暂时保留或不再采用。调整后，我会重新检查想法范围是否扩大、选定方向是否兼具新意和价值，以及内容是否足以理解；若仍没有合适方向，就继续探索，达到这些条件后再结束构思。由此形成的经验是：当想法开始重复时，应切换搜索方向；当有潜力的想法出现后，再从广泛探索转向持续深化。'
   };
 
   return normalizeEvaluation(
@@ -457,7 +418,7 @@ export async function generateEvaluation(
   );
 
   const maxTokens = Number(
-    env('AI_MAX_TOKENS', '2800')
+    env('AI_MAX_TOKENS', '2500')
   );
 
   const responseFormat = env(
