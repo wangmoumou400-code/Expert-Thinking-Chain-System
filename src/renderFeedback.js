@@ -57,30 +57,6 @@ function scoreLines(evaluation) {
   ].join('\n');
 }
 
-function creativeQualityLines(
-  evaluation
-) {
-  const quality =
-    evaluation?.creative_quality || {};
-
-  return [
-    '原创性：',
-    cleanText(
-      quality.originality_judgment
-    ),
-    '',
-    '实用性：',
-    cleanText(
-      quality.usefulness_judgment
-    ),
-    '',
-    '具体性：',
-    cleanText(
-      quality.elaboration_judgment
-    )
-  ].join('\n');
-}
-
 function cpsLines(evaluation) {
   const rows = Array.isArray(
     evaluation?.cps_structure
@@ -129,9 +105,6 @@ function commonStructuredFeedback(
   return [
     '【结构化评价结果】',
     scoreLines(evaluation),
-    '',
-    '【创造质量判断】',
-    creativeQualityLines(evaluation),
     '',
     '【CPS阶段评价】',
     cpsLines(evaluation),
