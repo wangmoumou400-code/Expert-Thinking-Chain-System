@@ -7,20 +7,34 @@ const EXPECTED_STAGES = [
   'Implement'
 ];
 
+const FORBIDDEN_TERM_PATTERN = /草稿/;
+
 const STRUCTURED_DIRECTIVE_PATTERN =
   /(建议|应当|应该|最好|不妨|尝试|可以进一步|优先处理|需要补充|修改为|返回.{0,8}阶段|保留.{0,12}功能|删除.{0,12}功能)/;
+
+const REPEATED_SCORE_PATTERN =
+  /(得分为|评分为|获得)\s*[1-7](?:\s*分)?/;
 
 const UNIVERSAL_EXPERIENCE_PATTERN =
   /(完整的?用户体验|用户体验闭环|体验闭环|统一体验|整合体验|完整使用流程)/;
 
+const UNSUPPORTED_ASSERTION_PATTERN =
+  /(确保|有效支持|潜在市场价值|市场前景广阔|已通过.{0,12}测试|经测试证明)/;
+
+const DIRECT_CONTENT_CONTROL_PATTERN =
+  /(?:我会|我将).{0,12}(?:补充|加入|增加|设计出|改成|替换成)/;
+
 const CONTROL_PATTERN =
-  /(继续生成|继续搜索|切换|重新界定|重新理解|比较|筛选|深化|暂时保留|舍弃|分开|组合|继续投入|停止|结束)/;
+  /(继续生成|继续搜索|切换|重新界定|重新理解|比较|筛选|检验|判断|持续发展|继续发展|继续深化|暂时保留|舍弃|分开|组合|继续投入|停止|结束|提交|完成当前构思)/;
 
 const CONDITIONAL_PATTERN =
-  /(如果|若|当.+时|仍未|仍然|达到.+后|满足.+后)/;
+  /(如果|若|当.+时|仍未|仍然|达到.+后|满足.+后|只有.+才)/;
+
+const CANDIDATE_COMPARISON_PATTERN =
+  /(相比|相较|比较|分别来看|其中|两者|前者|后者|更接近|更具有)/;
 
 const OLD_TEMPLATE_PATTERNS = [
-  /接手这份草稿时，我先明确这是一个开放性任务/,
+  /接手这份.{0,12}时，我先明确/,
   /由此看来，当前问题不是/,
   /因此，我会把策略从/,
   /调整后，我会重新检查/,
@@ -56,7 +70,7 @@ export function parseJsonOutput(text) {
       return JSON.parse(cleaned.slice(first, last + 1));
     }
 
-    throw new Error('模型返回的内容不是有效JSON。');
+    throw new Error('模型返回内容不是有效JSON。');
   }
 }
 
@@ -67,16 +81,6 @@ function cleanText(value) {
     .trim();
 }
 
-function numberInRange(value, min, max) {
-  const parsed = Number.parseInt(String(value ?? ''), 10);
-
-  if (!Number.isFinite(parsed)) {
-    throw new Error(`缺少${min}-${max}范围内的整数评分。`);
-  }
-
-  return Math.max(min, Math.min(max, parsed));
-}
-
 function requireText(value, fieldName) {
   const text = cleanText(value);
 
@@ -85,6 +89,20 @@ function requireText(value, fieldName) {
   }
 
   return text;
+}
+
+function numberInRange(value, min, max, fieldName) {
+  const parsed = Number.parseInt(String(value ?? ''), 10);
+
+  if (!Number.isFinite(parsed)) {
+    throw new Error(`${fieldName}缺少有效整数。`);
+  }
+
+  if (parsed < min || parsed > max) {
+    throw new Error(`${fieldName}必须在${min}-${max}之间。`);
+  }
+
+  return parsed;
 }
 
 function extractApiText(data) {
@@ -111,46 +129,70 @@ function extractApiText(data) {
   throw new Error('API响应中没有可读取的模型文本。');
 }
 
+function assertTerminology(text, fieldName) {
+  if (FORBIDDEN_TERM_PATTERN.test(text)) {
+    throw new Error(`${fieldName}使用了禁止的参与者术语。`);
+  }
+}
+
+function assertEvidenceBoundary(text, fieldName) {
+  if (UNSUPPORTED_ASSERTION_PATTERN.test(text)) {
+    throw new Error(`${fieldName}包含越过证据边界的断言。`);
+  }
+
+  if (
+    /符合.{0,16}标准/.test(text) &&
+    !/(声称|提出|提到|写明)/.test(text)
+  ) {
+    throw new Error(
+      `${fieldName}把参与者的合规声称当作已验证事实。`
+    );
+  }
+}
+
 function normalizeScores(scores = {}) {
   const usefulness = numberInRange(
     scores.usefulness_score ?? scores.quality_score,
     1,
-    7
+    7,
+    'usefulness_score'
   );
 
   return {
-    overall_score: numberInRange(scores.overall_score, 1, 6),
-    originality_score: numberInRange(scores.originality_score, 1, 7),
+    overall_score: numberInRange(
+      scores.overall_score,
+      1,
+      6,
+      'overall_score'
+    ),
+    originality_score: numberInRange(
+      scores.originality_score,
+      1,
+      7,
+      'originality_score'
+    ),
     usefulness_score: usefulness,
     quality_score: usefulness,
-    elaboration_score: numberInRange(scores.elaboration_score, 1, 7)
+    elaboration_score: numberInRange(
+      scores.elaboration_score,
+      1,
+      7,
+      'elaboration_score'
+    )
   };
 }
 
-function normalizeDiagnosticMeta(meta = {}) {
-  if (typeof meta.process_flow_relevant !== 'boolean') {
-    throw new Error('diagnostic_meta.process_flow_relevant必须是布尔值。');
+function validateStructuredText(text, fieldName) {
+  assertTerminology(text, fieldName);
+  assertEvidenceBoundary(text, fieldName);
+
+  if (STRUCTURED_DIRECTIVE_PATTERN.test(text)) {
+    throw new Error(`${fieldName}包含修改方向或建议。`);
   }
 
-  return {
-    primary_product_type: requireText(
-      meta.primary_product_type,
-      'diagnostic_meta.primary_product_type'
-    ),
-    process_flow_relevant: meta.process_flow_relevant,
-    creative_process_state: requireText(
-      meta.creative_process_state,
-      'diagnostic_meta.creative_process_state'
-    ),
-    control_operation: requireText(
-      meta.control_operation,
-      'diagnostic_meta.control_operation'
-    ),
-    control_basis: requireText(
-      meta.control_basis,
-      'diagnostic_meta.control_basis'
-    )
-  };
+  if (REPEATED_SCORE_PATTERN.test(text)) {
+    throw new Error(`${fieldName}重复陈述了标题中的数字评分。`);
+  }
 }
 
 function normalizeCpsStructure(rows) {
@@ -175,17 +217,75 @@ function normalizeCpsStructure(rows) {
       `${stage}.evaluative_comment`
     );
 
-    if (STRUCTURED_DIRECTIVE_PATTERN.test(comment)) {
-      throw new Error(`${stage}阶段评价包含修改建议，必须改为描述性评价。`);
+    assertTerminology(
+      evidence,
+      `${stage}.evidence_from_draft`
+    );
+
+    validateStructuredText(
+      comment,
+      `${stage}.evaluative_comment`
+    );
+
+    if (
+      stage === 'Implement' &&
+      /(完整的方案|方案十分完整|形成了完整方案)/.test(comment) &&
+      /(不足|有限|不清楚|尚未)/.test(comment)
+    ) {
+      throw new Error(
+        'Implement评价同时声称方案完整和核心信息不足。'
+      );
     }
 
     return {
       stage,
-      stage_score: numberInRange(row.stage_score, 1, 4),
+      stage_score: numberInRange(
+        row.stage_score,
+        1,
+        4,
+        `${stage}.stage_score`
+      ),
       evidence_from_draft: evidence,
       evaluative_comment: comment
     };
   });
+}
+
+function extractIdeateSection(responseText) {
+  const text = String(responseText || '');
+
+  const startMatch = text.match(
+    /(?:Ideate\s*生成想法|2[.．、\s]*Ideate|生成想法)/
+  );
+
+  if (!startMatch || startMatch.index === undefined) {
+    return '';
+  }
+
+  const start = startMatch.index + startMatch[0].length;
+  const remaining = text.slice(start);
+
+  const endMatch = remaining.match(
+    /(?:Develop\s*发展方案|3[.．、\s]*Develop|发展方案)/
+  );
+
+  if (!endMatch || endMatch.index === undefined) {
+    return remaining;
+  }
+
+  return remaining.slice(0, endMatch.index);
+}
+
+function currentResponseHasMultipleCandidates(responseText) {
+  const ideateSection = extractIdeateSection(responseText);
+
+  if (!ideateSection) return false;
+
+  const numberedIdeas = ideateSection.match(
+    /(?:^|\n)\s*\d+\s*[.．、)]/g
+  );
+
+  return (numberedIdeas || []).length >= 2;
 }
 
 function cleanCmc(text) {
@@ -202,7 +302,10 @@ function cleanCmc(text) {
     .trim();
 }
 
-function validateCmc(cmc, meta) {
+function validateCmc(cmc, responseText) {
+  assertTerminology(cmc, 'cmc_overall_comment');
+  assertEvidenceBoundary(cmc, 'cmc_overall_comment');
+
   if (cmc.length < 120) {
     throw new Error('CMC段落过短，未充分呈现监控和控制。');
   }
@@ -216,69 +319,115 @@ function validateCmc(cmc, meta) {
   }
 
   if (!CONTROL_PATTERN.test(cmc)) {
-    throw new Error('CMC段落缺少明确的控制操作。');
+    throw new Error('CMC段落缺少明确的认知控制操作。');
   }
 
   if (!CONDITIONAL_PATTERN.test(cmc)) {
     throw new Error('CMC段落缺少条件性的继续或停止判断。');
   }
 
-  if (
-    meta.process_flow_relevant === false &&
-    UNIVERSAL_EXPERIENCE_PATTERN.test(cmc)
-  ) {
-    throw new Error('当前方案不适用体验流程标准，CMC却使用了该标准。');
+  if (DIRECT_CONTENT_CONTROL_PATTERN.test(cmc)) {
+    throw new Error(
+      'CMC直接规定了需要加入的产品内容，应改为认知控制过程。'
+    );
   }
 
-  const oldTemplateHitCount = OLD_TEMPLATE_PATTERNS
+  if (UNIVERSAL_EXPERIENCE_PATTERN.test(cmc)) {
+    throw new Error(
+      'CMC使用了容易形成评价偏置的通用体验表达。'
+    );
+  }
+
+  if (
+    currentResponseHasMultipleCandidates(responseText) &&
+    !CANDIDATE_COMPARISON_PATTERN.test(cmc)
+  ) {
+    throw new Error(
+      '当前作答包含多个候选想法，但CMC没有呈现候选比较。'
+    );
+  }
+
+  if (
+    /(已经选择|已经选定|选定了|最终方案|进入发展)/.test(cmc) &&
+    /停止探索/.test(cmc)
+  ) {
+    throw new Error(
+      '方案已进入选择或发展阶段，停止判断不应继续使用“停止探索”。'
+    );
+  }
+
+  const templateHitCount = OLD_TEMPLATE_PATTERNS
     .filter((pattern) => pattern.test(cmc))
     .length;
 
-  if (oldTemplateHitCount >= 3) {
-    throw new Error('CMC重复使用旧版固定句式，需要按当前案例重新组织。');
+  if (templateHitCount >= 3) {
+    throw new Error(
+      'CMC重复使用旧版固定句式，需要根据当前作答重新组织。'
+    );
   }
 }
 
-function validateCrossSectionSeparation(evaluation) {
-  const cmc = evaluation.cmc_overall_comment;
-  const structured = [
-    evaluation.structured_overall_comment,
-    ...evaluation.cps_structure.map((row) => row.evaluative_comment)
-  ].join(' ');
-
-  if (
-    evaluation.diagnostic_meta.process_flow_relevant === false &&
-    UNIVERSAL_EXPERIENCE_PATTERN.test(structured)
-  ) {
-    throw new Error('结构化反馈把体验流程误作当前方案的通用标准。');
-  }
-
-  const cmcSentences = cmc
+function sentenceList(text) {
+  return String(text || '')
     .split(/[。！？]/)
     .map((item) => item.trim())
     .filter((item) => item.length >= 12);
+}
 
-  const duplicated = cmcSentences.some((sentence) =>
-    structured.includes(sentence)
+function validateCrossSectionSeparation(evaluation) {
+  const structuredText = [
+    evaluation.structured_overall_comment,
+    ...evaluation.cps_structure.map(
+      (row) => row.evaluative_comment
+    )
+  ].join(' ');
+
+  if (UNIVERSAL_EXPERIENCE_PATTERN.test(structuredText)) {
+    throw new Error(
+      '结构化反馈使用了容易形成偏置的通用体验表达。'
+    );
+  }
+
+  const duplicatedSentence = sentenceList(
+    evaluation.cmc_overall_comment
+  ).find((sentence) => structuredText.includes(sentence));
+
+  if (duplicatedSentence) {
+    throw new Error(
+      'CMC与结构化反馈存在整句重复。'
+    );
+  }
+
+  const repeatedLimitationTerms = [
+    '细节不足',
+    '具体实现不足',
+    '机制不足',
+    '流程不足',
+    '缺乏详细说明'
+  ].filter(
+    (term) =>
+      evaluation.cmc_overall_comment.includes(term) &&
+      structuredText.includes(term)
   );
 
-  if (duplicated) {
-    throw new Error('CMC与结构化反馈存在整句重复。');
+  if (repeatedLimitationTerms.length > 0) {
+    throw new Error(
+      'CMC重复了结构化反馈中的具体缺陷，应改为过程状态监控。'
+    );
   }
 }
 
-function normalizeEvaluation(rawEvaluation) {
+function normalizeEvaluation(
+  rawEvaluation,
+  responseText = ''
+) {
   if (
     !rawEvaluation ||
     typeof rawEvaluation !== 'object' ||
     Array.isArray(rawEvaluation)
   ) {
-    throw new Error('模型输出不是评价对象。');
+    throw new Error('模型输出不是有效评价对象。');
   }
-
-  const diagnosticMeta = normalizeDiagnosticMeta(
-    rawEvaluation.diagnostic_meta
-  );
 
   const cpsStructure = normalizeCpsStructure(
     rawEvaluation.cps_structure
@@ -289,9 +438,10 @@ function normalizeEvaluation(rawEvaluation) {
     'structured_overall_comment'
   );
 
-  if (STRUCTURED_DIRECTIVE_PATTERN.test(structuredOverallComment)) {
-    throw new Error('总体评价包含修改建议，必须改为描述性评价。');
-  }
+  validateStructuredText(
+    structuredOverallComment,
+    'structured_overall_comment'
+  );
 
   const cmcOverallComment = cleanCmc(
     requireText(
@@ -300,10 +450,9 @@ function normalizeEvaluation(rawEvaluation) {
     )
   );
 
-  validateCmc(cmcOverallComment, diagnosticMeta);
+  validateCmc(cmcOverallComment, responseText);
 
   const normalized = {
-    diagnostic_meta: diagnosticMeta,
     scores: normalizeScores(rawEvaluation.scores),
     cps_structure: cpsStructure,
     structured_overall_comment: structuredOverallComment,
@@ -311,18 +460,12 @@ function normalizeEvaluation(rawEvaluation) {
   };
 
   validateCrossSectionSeparation(normalized);
+
   return normalized;
 }
 
 function explicitMockEvaluation() {
   return {
-    diagnostic_meta: {
-      primary_product_type: '模拟模式',
-      process_flow_relevant: false,
-      creative_process_state: '未调用模型，不能判断',
-      control_operation: '未调用模型，不能判断',
-      control_basis: '当前仅用于界面测试'
-    },
     scores: {
       overall_score: 1,
       originality_score: 1,
@@ -334,12 +477,13 @@ function explicitMockEvaluation() {
       stage,
       stage_score: 1,
       evidence_from_draft: '模拟模式未调用模型。',
-      evaluative_comment: '这是界面测试占位文本，不能作为实验反馈或研究数据。'
+      evaluative_comment:
+        '这是界面测试占位文本，不能作为实验反馈或研究数据。'
     })),
     structured_overall_comment:
       '当前为模拟模式，未生成真实评价，不能用于实验。',
     cmc_overall_comment:
-      '当前为模拟模式，没有调用人工智能模型，因此不能根据草稿重建专家的创造力元认知过程。这段文字只用于检查页面显示、计时和数据传输是否正常，不能作为反馈内容、评分依据或正式实验数据。'
+      '当前为模拟模式，没有调用人工智能模型，因此不能根据参与者方案重建专家的创造力元认知过程。这段文字只用于检查页面显示、计时和数据传输是否正常，不能作为反馈内容、评分依据或正式实验数据。'
   };
 }
 
@@ -368,7 +512,10 @@ async function requestCompletion(messages, config) {
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`API请求失败：${response.status} ${errorText}`);
+
+    throw new Error(
+      `API请求失败：${response.status} ${errorText}`
+    );
   }
 
   const data = await response.json();
@@ -379,7 +526,11 @@ async function requestCompletion(messages, config) {
   };
 }
 
-function repairMessages(messages, rawText, validationError) {
+function repairMessages(
+  messages,
+  rawText,
+  validationError
+) {
   return [
     ...messages,
     {
@@ -389,26 +540,45 @@ function repairMessages(messages, rawText, validationError) {
     {
       role: 'user',
       content: `
-The previous JSON failed the output audit:
+The previous output failed the current-request audit:
 
 ${validationError.message}
 
-Regenerate the complete JSON object from the original participant response.
+Regenerate the complete JSON object using only the current participant response.
 
-Correct the identified problem while preserving evidence-based scoring.
-Do not use a generic experience-flow diagnosis.
-Do not copy the old CMC sentence template.
-Return valid JSON only.
+Requirements:
+- do not include additional diagnostic or metadata fields;
+- do not use “草稿” in participant-facing Chinese;
+- do not repeat numerical scores inside stage comments;
+- do not invent market, testing, safety, or effectiveness evidence;
+- keep structured feedback descriptive;
+- make CMC describe monitoring and control;
+- do not repeat specific deficiencies from structured feedback;
+- do not prescribe product content;
+- use phase-appropriate stopping language;
+- return valid JSON only.
       `.trim()
     }
   ];
 }
 
-export async function generateEvaluation(messages) {
+export async function generateEvaluation(
+  messages,
+  context = {}
+) {
+  const responseText = String(
+    context.draft || ''
+  );
+
   const apiUrl = env('AI_API_URL');
   const apiKey = env('AI_API_KEY');
-  const model = env('AI_MODEL', '__MODEL_TO_BE_SELECTED__');
-  const allowMock = env('ALLOW_MOCK', 'false').toLowerCase() === 'true';
+  const model = env(
+    'AI_MODEL',
+    '__MODEL_TO_BE_SELECTED__'
+  );
+
+  const allowMock =
+    env('ALLOW_MOCK', 'false').toLowerCase() === 'true';
 
   if (
     !isConfigured(apiUrl) ||
@@ -417,8 +587,8 @@ export async function generateEvaluation(messages) {
   ) {
     if (!allowMock) {
       throw new Error(
-        'AI接口尚未完整配置。为防止模拟文本被误作实验数据，系统已停止生成。' +
-        '如仅测试页面，请在.env中设置ALLOW_MOCK=true。'
+        'AI接口尚未完整配置。为防止模拟文本被误作实验数据，' +
+        '系统已停止生成。如仅测试页面，请设置ALLOW_MOCK=true。'
       );
     }
 
@@ -427,7 +597,11 @@ export async function generateEvaluation(messages) {
     return {
       mock: true,
       model: 'explicit-mock',
-      rawText: JSON.stringify(parsedJson, null, 2),
+      rawText: JSON.stringify(
+        parsedJson,
+        null,
+        2
+      ),
       parsedJson,
       usage: null
     };
@@ -437,16 +611,27 @@ export async function generateEvaluation(messages) {
     apiUrl,
     apiKey,
     model,
-    temperature: Number(env('AI_TEMPERATURE', '0')),
-    maxTokens: Number(env('AI_MAX_TOKENS', '2500')),
-    responseFormat: env('AI_RESPONSE_FORMAT', 'none')
+    temperature: Number(
+      env('AI_TEMPERATURE', '0')
+    ),
+    maxTokens: Number(
+      env('AI_MAX_TOKENS', '2500')
+    ),
+    responseFormat: env(
+      'AI_RESPONSE_FORMAT',
+      'none'
+    )
   };
 
-  const firstResult = await requestCompletion(messages, config);
+  const firstResult = await requestCompletion(
+    messages,
+    config
+  );
 
   try {
     const parsedJson = normalizeEvaluation(
-      parseJsonOutput(firstResult.rawText)
+      parseJsonOutput(firstResult.rawText),
+      responseText
     );
 
     return {
@@ -458,13 +643,18 @@ export async function generateEvaluation(messages) {
     };
   } catch (firstError) {
     const repairedResult = await requestCompletion(
-      repairMessages(messages, firstResult.rawText, firstError),
+      repairMessages(
+        messages,
+        firstResult.rawText,
+        firstError
+      ),
       config
     );
 
     try {
       const parsedJson = normalizeEvaluation(
-        parseJsonOutput(repairedResult.rawText)
+        parseJsonOutput(repairedResult.rawText),
+        responseText
       );
 
       return {
@@ -476,7 +666,7 @@ export async function generateEvaluation(messages) {
       };
     } catch (secondError) {
       throw new Error(
-        `模型两次输出均未通过评价结构检查：${secondError.message}`
+        `模型两次输出均未通过评价检查：${secondError.message}`
       );
     }
   }
