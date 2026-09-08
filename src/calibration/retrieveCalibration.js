@@ -1,119 +1,76 @@
 import {
   rubricVersion,
-  urbanProductImprovementRubric,
-  studyScaleMapping,
-  overallCreativityRubric,
+  taskRubric,
+  creativeQualityRubric,
   cpsRubric,
-  typeRelevantCriteria,
-  scoringGuardrails
+  calibrationPrinciples
 } from './rubrics.js';
 
 import {
   anchorVersion,
   anchorUseInstructions,
-  urbanAnchors,
-  dimensionAnchors
+  urbanSourceAnchors
 } from './anchors.js';
 
-function formatUrbanAnchors() {
-  return urbanAnchors
-    .map((anchor) => `
-${anchor.id}
-Urban level: ${anchor.urbanLevel}/5
-Study-scale band: ${anchor.studyBand}/7
-Quality: ${anchor.quality}
-Elaboration: ${anchor.elaboration}
-Originality: ${anchor.originality}
-Source example: ${anchor.sourceExample}
-Boundary: ${anchor.boundary}
-    `.trim())
+function formatAnchors() {
+  return urbanSourceAnchors
+    .map((anchor) => {
+      return [
+        `Level ${anchor.level}`,
+        `Quality: ${anchor.quality}`,
+        `Elaboration: ${anchor.elaboration}`,
+        `Originality: ${anchor.originality}`,
+        `Source example: ${anchor.sourceExample}`
+      ].join('\n');
+    })
     .join('\n\n');
 }
 
-function formatDimensionAnchors() {
-  return Object.entries(dimensionAnchors)
-    .map(([dimension, anchors]) => `
-${dimension.toUpperCase()}
-${anchors.map((item) => `- ${item}`).join('\n')}
-    `.trim())
-    .join('\n\n');
-}
+const STATIC_CALIBRATION_CONTEXT = `
+CALIBRATION VERSION
+${rubricVersion}
+${anchorVersion}
 
-const FIXED_CALIBRATION_TEXT = `
-FIXED EXPERT CALIBRATION
+${taskRubric}
 
-The following calibration is identical for every participant.
-
-It contains:
-- no participant history;
-- no keyword retrieval;
-- no similarity matching;
-- no participant-specific score cap;
-- no previous evaluation;
-- no feedback-language example.
-
-1. Urban et al. source matrix
-
-${urbanProductImprovementRubric}
-
-2. Mapping to this study's scales
-
-${studyScaleMapping}
-
-3. Overall creativity rubric
-
-${overallCreativityRubric}
-
-4. CPS stage rubric
+${creativeQualityRubric}
 
 ${cpsRubric}
 
-5. Type-relevant criteria
+SOURCE ANCHORS
 
-${typeRelevantCriteria}
-
-6. Scoring guardrails
-
-${scoringGuardrails}
-
-7. Urban source anchors
-
-${formatUrbanAnchors()}
-
-8. Dimension anchors
-
-${formatDimensionAnchors()}
-
-9. Anchor-use instructions
+${formatAnchors()}
 
 ${anchorUseInstructions}
+
+${calibrationPrinciples}
 `.trim();
 
+/*
+ * The calibration context is static and identical for every participant.
+ * It does not inspect the current response, retrieve previous responses,
+ * classify participants, store diagnostics, or apply topic-based score caps.
+ */
 export function buildCalibrationContext() {
+  return STATIC_CALIBRATION_CONTEXT;
+}
+
+/*
+ * Compatibility export for older imports.
+ * No participant response is accepted or analysed.
+ */
+export function retrieveCalibration() {
   return {
-    text: FIXED_CALIBRATION_TEXT,
-    metadata: {
-      fixed: true,
-      rubricVersion,
-      anchorVersion
-    }
+    version: `${rubricVersion}; ${anchorVersion}`,
+    text: STATIC_CALIBRATION_CONTEXT
   };
 }
 
 /*
- * Compatibility exports only.
- * They never inspect participant content or change scores.
+ * Compatibility export for older code.
+ * Scores are returned unchanged because automatic caps based on keywords
+ * would introduce task-content and experimental-condition bias.
  */
-export function retrieveCalibration() {
-  return {
-    fixed: true,
-    rubricVersion,
-    anchorVersion,
-    scoreCaps: {},
-    matchedAnchors: []
-  };
-}
-
 export function applyCalibrationCaps(evaluation) {
   return evaluation;
 }
