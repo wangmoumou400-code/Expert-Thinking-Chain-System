@@ -1,108 +1,65 @@
 export const anchorVersion =
-  'v11-urban-source-anchors-no-language-imitation-2026-09-08';
+  'v10-urban-source-anchors-no-case-matching-2026-09-08';
 
 export const anchorUseInstructions = `
-These anchors are identical for every participant.
+These rows reproduce the semantic progression of Urban et al. (2024),
+Appendix 1.
 
-They represent the five levels shown in Urban et al. (2024), Appendix 1.
-Use them only to calibrate score severity.
+They must be used only to understand the difference between low and high
+levels. They must not be matched to the current response through keywords.
 
-Do not copy their wording into feedback.
-Do not treat them as required product types.
-Do not use one anchor as a fixed score for the entire response.
-Judge quality, elaboration, and originality separately.
-Do not assume every high-scoring proposal must resemble the level-5 example.
+Do not:
+- assign the listed example's score to a similar-looking response;
+- copy its content or wording into participant feedback;
+- treat the level-5 app example as the required form of a high-quality idea;
+- assume that technology or multiple functions deserve a high score;
+- infer that a proposal is weak merely because it is a material, structural,
+  appearance, safety, portability, or single-function improvement.
+
+The defining criteria are quality, elaboration, and originality.
+The examples are source-task illustrations only.
 `;
 
-export const urbanAnchors = [
-  {
-    id: 'URBAN_LEVEL_1',
-    urbanLevel: 1,
-    studyBand: '1-2',
+export const urbanSourceAnchors = Object.freeze([
+  Object.freeze({
+    level: 1,
     quality: 'Non-specific ideas.',
     elaboration: 'No detail.',
     originality: 'Most common ideas.',
-    sourceExample: 'Changing colour or making the eyes larger.',
-    boundary:
-      'An appearance idea is not automatically level 1 when it has a distinctive and sufficiently developed purpose.'
-  },
-  {
-    id: 'URBAN_LEVEL_2',
-    urbanLevel: 2,
-    studyBand: '3',
+    sourceExample: 'Changing the color or making the eyes larger.'
+  }),
+  Object.freeze({
+    level: 2,
     quality: 'Minor improvements.',
     elaboration: 'Some detail.',
     originality: 'Ideas that are slightly different.',
     sourceExample:
-      'Allowing the rabbit to wear more personalised clothing.',
-    boundary:
-      'Personalisation may perform differently when it has a developed function rather than serving only as decoration.'
-  },
-  {
-    id: 'URBAN_LEVEL_3',
-    urbanLevel: 3,
-    studyBand: '4',
+      'Allowing the rabbit to be dressed in more personalized clothes.'
+  }),
+  Object.freeze({
+    level: 3,
     quality: 'Major improvements.',
     elaboration: 'Moderate detail.',
     originality: 'Unusual ideas reflecting a general trend.',
     sourceExample:
-      'Adding built-in LED lights or light strips controlled by buttons.',
-    boundary:
-      'Technology does not automatically increase originality beyond this level.'
-  },
-  {
-    id: 'URBAN_LEVEL_4',
-    urbanLevel: 4,
-    studyBand: '5-6',
-    quality:
-      'Some alignment with both goals in the original task.',
-    elaboration: 'Substantial detail.',
+      'Adding built-in LED lights or light strips activated by buttons.'
+  }),
+  Object.freeze({
+    level: 4,
+    quality: 'Clear alignment with the source task goals.',
+    elaboration: 'Substantial relevant detail.',
     originality: 'Rare ideas.',
     sourceExample:
-      'Combining the rabbit with a reader, speaker, and accompanying books.',
-    boundary:
-      'Choose 5 unless the evidence clearly supports the stronger end of this band.'
-  },
-  {
-    id: 'URBAN_LEVEL_5',
-    urbanLevel: 5,
-    studyBand: '7',
-    quality:
-      'Strong alignment with both goals in the original task.',
+      'Adding reading and speaking functions connected with educational books.'
+  }),
+  Object.freeze({
+    level: 5,
+    quality: 'Strong alignment with the source task goals.',
     elaboration:
-      'Exceptionally developed and coherently presented for the source task.',
+      'Highly developed solutions presented in a coherent account.',
     originality:
       'Unique and surprising ideas offering novel insight or meaningful cross-domain use.',
     sourceExample:
-      'An application combined with microphone, speaker, sensors, and participant-created activities.',
-    boundary:
-      'This is one exceptional example, not a requirement for applications, multiple functions, ecosystems, or interaction loops.'
-  }
-];
-
-export const dimensionAnchors = {
-  originality: [
-    '1-2: absent, generic, or among the most common responses.',
-    '3: familiar minor extension.',
-    '4: unusual mainly as part of a general trend.',
-    '5: clearly distinctive or relatively uncommon.',
-    '6: rare and surprising with a clear point of difference.',
-    '7: exceptional and highly surprising.'
-  ],
-  usefulness: [
-    '1-2: little identifiable task value.',
-    '3: limited or broadly stated value.',
-    '4: plausible basic value.',
-    '5: clear potential value.',
-    '6: strong potential value supported by the described design.',
-    '7: exceptional task alignment and operating awareness.'
-  ],
-  elaboration: [
-    '1-2: absent or very limited development.',
-    '3: basic development.',
-    '4: understandable core idea with moderate detail.',
-    '5: clear development with several relevant details.',
-    '6: substantial explanation of the central property or mechanism.',
-    '7: exceptionally complete and precise development.'
-  ]
-};
+      'An app, microphone, speaker, sensors, games, and learning activities presented as one developed concept.'
+  })
+]);
