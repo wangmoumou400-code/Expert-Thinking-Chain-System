@@ -1,240 +1,231 @@
-export const rubricVersion = 'v9-urban-hidden-calibration-output-6-7-2026-07-02';
+export const rubricVersion =
+  'v10-fixed-urban-calibration-type-adaptive-2026-09-08';
 
-export const taskRubric = `
-Task-specific expert rubric for the ordinary 30 cm plush rabbit Product Improvement Task.
+export const urbanProductImprovementRubric = `
+FIXED URBAN ET AL. (2024) PRODUCT IMPROVEMENT MATRIX
 
-Urban et al. (2024, Computers & Education), Appendix 1 provides a Product Improvement Task evaluation matrix with three dimensions:
-1. Quality: usefulness for goals.
-2. Elaboration: amount of detail and coherence.
-3. Originality: uniqueness of ideas.
+This matrix is supplied identically for every participant.
 
-In this system, Urban et al.'s matrix is used as a hidden expert calibration framework, not as the participant-facing scoring scale.
+Quality: usefulness for goals
+1 = non-specific ideas.
+2 = minor improvements.
+3 = major improvements.
+4 = some alignment with both original task goals.
+5 = strong alignment with both original task goals.
 
-Mapping to this study:
-- Urban Quality corresponds to this study's usefulness_score / 实用性.
-- Urban Elaboration corresponds to this study's elaboration_score / 具体性.
-- Urban Originality corresponds to this study's originality_score / 原创性.
-- Overall creativity is this study's holistic expert judgment.
+Elaboration: amount of detail and coherence
+1 = no detail.
+2 = some detail.
+3 = moderate detail.
+4 = substantial detail.
+5 = the proposed solutions are connected in a coherent account.
 
-Participant-facing output scales:
-- overall_score: 1-6.
-- usefulness_score / quality_score: 1-7.
-- elaboration_score: 1-7.
-- originality_score: 1-7.
-- CPS stage_score: 1-4.
+Originality: uniqueness of ideas
+1 = most common ideas.
+2 = ideas that are slightly different.
+3 = unusual ideas reflecting a general trend.
+4 = rare ideas.
+5 = unique and surprising ideas, such as ideas offering novel insights or
+    drawing meaningfully on knowledge from different domains.
 
-Urban-style semantic anchors:
-- Very low: non-specific ideas, color change, larger eyes, no detail, most common ideas.
-- Low: minor decorative or personalization changes, such as clothing or surface accessories.
-- Medium: major but common trend-based improvements, such as LED light, music, simple smart function, pocket, heating, or recording.
-- High: clearer scenario-based product extension, such as reading support, learning companion, situated emotional support, or a coherent use process.
-- Very high: surprising and coherent cross-domain integration, where multiple elements form one meaningful product experience.
+SOURCE-USE BOUNDARIES
 
-Important calibration principles:
-- Do not convert the output to Urban's 1-5 scale.
-- Use Urban's criteria to decide what counts as low, medium, or high quality, elaboration, and originality.
-- Common add-ons such as lights, music, clothing, pockets, heating, recording, Bluetooth, app, or sensors should not receive high originality unless the draft explains a distinctive mechanism or user experience.
-- Practical optimization can receive high usefulness and elaboration even when originality is moderate.
-- High-risk ideas involving children, medical use, heating, electronics, movement, privacy, emotional support, or data collection require safety, boundary, maintenance, or implementation awareness before receiving high usefulness or elaboration.
-- Participants are university students in a short laboratory task. Do not require market survey data, real user feedback data, professional testing data, or industry-level cost estimates.
-- Treat strong claims such as "永不脱落", "通过严格测试", "一秒回弹", "显著提升", "完全解决", "降低风险", or "容易量产" as participant claims, not verified evidence.
+Urban et al.'s original task contained the goals of improving the rabbit and
+increasing sales. If the current experiment does not include a sales goal, do
+not invent or evaluate sales performance.
+
+The source's level-5 elaboration example connected three solutions in one
+coherent narrative. This is a source-specific high-level anchor. It does not
+mean every proposal must contain three solutions, multiple functions, an app,
+or a complete interaction experience.
+
+The source examples represent score levels rather than mandatory product forms.
+`;
+
+export const studyScaleMapping = `
+MAPPING FROM URBAN'S 1-5 SEMANTIC LEVELS TO THIS STUDY'S 1-7 DIMENSION SCALES
+
+Urban level 1 generally corresponds to study scores 1-2.
+Urban level 2 generally corresponds to study score 3.
+Urban level 3 generally corresponds to study score 4.
+Urban level 4 generally corresponds to study scores 5-6.
+Urban level 5 generally corresponds to study score 7.
+
+Choose the lower or upper value within a band from the strength of evidence.
+Do not automatically choose the upper value.
+
+ORIGINALITY 1-7
+
+1 = no identifiable creative idea.
+2 = highly common and minimally changed.
+3 = familiar minor extension.
+4 = relevant but broadly familiar or trend-based improvement.
+5 = clearly distinctive or uncommon relative to ordinary plush-toy ideas.
+6 = rare and surprising, with a clearly explained point of difference.
+7 = exceptional, highly surprising and convincingly developed.
+
+A product name, technical term, multiple functions, long description, or
+unverified claim cannot by itself justify originality above 4.
+
+USEFULNESS 1-7
+
+1 = no identifiable use value.
+2 = weak connection with the task.
+3 = limited or broadly stated potential value.
+4 = plausible basic value.
+5 = clear potential value for the stated goal or situation.
+6 = strong potential value supported by the proposed design.
+7 = exceptional alignment with the task and convincing consideration of
+    relevant operating conditions.
+
+Usefulness means potential usefulness, not demonstrated effectiveness.
+
+ELABORATION/SPECIFICITY 1-7
+
+1 = no developed content.
+2 = isolated or vague statements.
+3 = a basic direction with little development.
+4 = an understandable core idea with some relevant details.
+5 = a clearly developed idea with several type-relevant details.
+6 = substantial development in which the central property, relationship, or
+    mechanism can be understood.
+7 = exceptionally complete, precise, coherent and type-appropriate development.
+
+If the central effect depends on a property, transformation, structural
+relationship, or operating mechanism that is not explained, elaboration should
+normally not exceed 5.
+`;
+
+export const overallCreativityRubric = `
+OVERALL CREATIVITY 1-6
+
+1 = little identifiable creative contribution.
+2 = limited creative development.
+3 = basic or moderate creative performance.
+4 = reasonably strong performance with a meaningful strength and visible limits.
+5 = strong creativity supported by at least two dimensions, without an unresolved
+    gap that directly threatens the central idea.
+6 = exceptional overall creativity, normally requiring originality, usefulness
+    and elaboration all to be very strong.
+
+A high usefulness score alone cannot justify overall 5 or 6.
+Clear writing alone cannot justify overall 5 or 6.
 `;
 
 export const cpsRubric = `
-CPS process rubric for structured feedback, scored 1-4.
+FIXED CPS STAGE RUBRIC, SCORED 1-4
 
-Clarify:
-1 = missing user, context, and need.
-2 = broad user or broad need only.
-3 = clear user, context, and need.
-4 = specific user, situated context, concrete need, and relevant constraint.
+CLARIFY
 
-Ideate:
+1 = the improvement goal or problem is largely absent.
+2 = a broad goal, problem or opportunity is mentioned.
+3 = relevant goals and problems are reasonably clear.
+4 = the intended result, relevant information and central challenge are clearly
+    represented and related.
+
+A named user or formal constraint is not mandatory unless the task requires it
+or it is central to the participant's concept.
+
+IDEATE
+
 1 = no visible idea generation.
-2 = mainly common feature additions.
-3 = several relevant directions or one clear alternative direction.
-4 = meaningfully diverse directions or a distinctive creative mechanism.
+2 = few, highly similar or unspecified ideas.
+3 = several relevant ideas with some genuine conceptual breadth.
+4 = several meaningfully different conceptual routes or distinctive alternatives.
 
-Develop:
-1 = no selected concept.
-2 = loose feature list.
-3 = coherent basic solution with core design and use mode.
-4 = integrated product experience with clear relation among functions, user need, and use flow.
+A creative category is a substantially different route that could produce a
+meaningfully different proposal. Materials, accessories or subfunctions serving
+one concept do not automatically count as separate categories.
 
-Implement:
-1 = no feasibility information.
-2 = shallow feasibility statement.
-3 = some material, technology, use-flow, safety, cleaning, cost, or production detail.
-4 = credible implementation awareness with relevant constraints or risks addressed.
+Five or more numbered entries do not automatically justify 4.
+
+DEVELOP
+
+1 = no selected or developed direction.
+2 = a loose idea or feature list with minimal development.
+3 = a recognizable solution with a reasonably clear central direction.
+4 = a well-developed solution whose type-relevant central property, relationship
+    or mechanism can be understood.
+
+Material names, feature names, use scenarios and writing length do not by
+themselves justify 4.
+
+IMPLEMENT
+
+1 = no identifiable final proposal.
+2 = a broad final concept with little specification.
+3 = a clear final proposal containing several relevant details.
+4 = a sufficiently concrete final proposal with type-relevant implementation
+    awareness and no major unexplained gap in its central operation.
+
+Professional testing and production documentation are not required.
+Unsupported claims such as safe, waterproof, compressible, effective, or easy
+to manufacture do not by themselves justify 4.
 `;
 
-export const commonThemes = [
-  {
-    id: 'appearance',
-    label: '外观/颜色/换装',
-    keywords: ['颜色', '眼睛', '外观', '衣服', '换装', '装饰', '蝴蝶结', '贴纸', '刺绣', '小卡', 'DIY']
-  },
-  {
-    id: 'sound',
-    label: '声音/音乐/录音',
-    keywords: ['唱歌', '音乐', '儿歌', '喇叭', '播放', '录音', '语音', '故事', '声音']
-  },
-  {
-    id: 'light',
-    label: '灯光/夜灯/发光',
-    keywords: ['灯', '发光', '夜灯', 'LED', '投影', '冷暖光', '灯带', '补光']
-  },
-  {
-    id: 'heating_sleep',
-    label: '加热/睡眠/陪伴',
-    keywords: ['加热', '发热', '暖手', '热敷', '睡前', '助眠', '抱枕', '陪伴', '安抚']
-  },
-  {
-    id: 'storage',
-    label: '口袋/收纳',
-    keywords: ['口袋', '收纳', '拉链', '装东西', '小包', '隐藏袋', '文具']
-  },
-  {
-    id: 'app_sensor_ai',
-    label: 'APP/传感器/智能',
-    keywords: ['APP', 'app', '蓝牙', '芯片', '传感器', 'AI', '算法', '识别', '数据', '小程序']
-  },
-  {
-    id: 'learning',
-    label: '学习/复习/知识',
-    keywords: ['学习', '背单词', '词汇', '复习', '真题', '知识', '教育', '考试', '学生']
-  },
-  {
-    id: 'medical_care',
-    label: '医疗/护理/康复',
-    keywords: ['患者', '术后', '医院', '病房', '伤口', '引流管', '康复', '疼痛', '过敏', '消毒', '护理']
-  },
-  {
-    id: 'mechanical_motion',
-    label: '机械运动/强干预',
-    keywords: ['轮子', '爬', '跑', '机械臂', '弹射', '飞行', '吸附', '马达', '震动', '电击', '图钉']
-  },
-  {
-    id: 'privacy_recording',
-    label: '隐私/记录/监测',
-    keywords: ['录音', '摄像', '麦克风', '定位', '记录', '监测', '情绪识别', '上传', '云端', '隐私']
-  }
-];
+export const typeRelevantCriteria = `
+TYPE-RELEVANT DEVELOPMENT CRITERIA
 
-export const scoreCapRules = [
-  {
-    id: 'COMMON_APPEARANCE_ONLY',
-    condition: 'The draft mainly changes color, eyes, clothing, decoration, or surface appearance.',
-    caps: { originalityMax: 3, usefulnessMax: 4, qualityMax: 4, overallMax: 3 },
-    warning: 'Appearance changes are common low-level product improvements unless they create a new interaction or use scenario.'
-  },
-  {
-    id: 'COMMON_SINGLE_FUNCTION',
-    condition: 'The core proposal is a single common plush-toy function such as music, light, pocket, warmth, or recording.',
-    caps: { originalityMax: 4, overallMax: 4 },
-    warning: 'A single common feature should not be treated as highly original.'
-  },
-  {
-    id: 'FEATURE_STACKING_NO_EXPERIENCE',
-    condition: 'Several functions are listed but no coherent trigger-interaction-feedback-use experience is explained.',
-    caps: { originalityMax: 4, elaborationMax: 4, overallMax: 4 },
-    warning: 'Function stacking is not the same as a coherent product concept.'
-  },
-  {
-    id: 'SMART_LABEL_NO_MECHANISM',
-    condition: 'The draft mentions APP, AI, Bluetooth, chip, sensor, or algorithm but does not explain data, mechanism, user control, or use flow.',
-    caps: { originalityMax: 4, elaborationMax: 4, usefulnessMax: 5, qualityMax: 5, overallMax: 4 },
-    warning: 'Technology labels should not inflate expert scores without mechanism evidence.'
-  },
-  {
-    id: 'RISK_WITHOUT_BOUNDARY',
-    condition: 'The draft involves children, heating, electronics, movement, medical use, privacy, recording, emotional support, or physical force but lacks safety, cleaning, privacy, consent, maintenance, or use-boundary explanation.',
-    caps: { usefulnessMax: 5, qualityMax: 5, elaborationMax: 4, overallMax: 4 },
-    warning: 'Risk-sensitive concepts need boundary and feasibility awareness before high usefulness or elaboration scores.'
-  },
-  {
-    id: 'STRONG_CLAIMS_NO_MECHANISM',
-    condition: 'The draft makes strong claims such as fully solves, guarantees, passes strict testing, greatly improves, reduces risk, clinical value, or increases sales without explaining mechanism or boundary.',
-    caps: { usefulnessMax: 5, qualityMax: 5, elaborationMax: 5 },
-    warning: 'Strong claims should be treated as unverified participant claims.'
-  }
-];
+Material improvement:
+Check whether the stated material property corresponds to the intended effect.
 
-export const lowQualityPatterns = [
-  'Only changes color, eyes, clothing, decoration, or cuteness.',
-  'Only adds one common function such as music, light, heat, pocket, recording, or simple app control.',
-  'Lists many functions without explaining how they form one user experience.',
-  'Uses broad needs such as fun, cute, useful, emotional, or companion without a concrete user/context.',
-  'Uses smart technology labels without explaining mechanism, use flow, safety, privacy, or maintenance.',
-  'Claims effects that are not supported by a plausible mechanism within the draft.'
-];
+Structural improvement:
+Check whether the main components and their structural relationship are clear.
 
-export const highQualityMechanisms = [
-  'A concrete user and use situation are identified before functions are added.',
-  'The rabbit form itself is used meaningfully, such as ears, belly, limbs, softness, hugging, portability, or symbolic value.',
-  'The concept forms a coherent use loop: need, trigger, interaction, feedback, and continued use.',
-  'The proposal distinguishes what is new, why it matters, and how users experience it.',
-  'Implementation details address materials, use flow, safety, cleaning, power, privacy, durability, cost, or production when relevant.',
-  'The idea balances originality with plausible usefulness instead of relying on novelty alone.'
-];
+Appearance improvement:
+Check the degree of visual difference and the purpose of the visual change.
 
-export function mergeScoreCaps(capsList = []) {
-  const merged = {};
+Safety or durability improvement:
+Check whether the identified weakness corresponds to the proposed protection.
 
-  for (const caps of capsList) {
-    if (!caps || typeof caps !== 'object') continue;
-    for (const [key, value] of Object.entries(caps)) {
-      if (typeof value !== 'number') continue;
-      merged[key] = merged[key] === undefined ? value : Math.min(merged[key], value);
-    }
-  }
+Portability or storage improvement:
+Check whether the physical transformation, carrying or storage principle can be
+understood and whether obvious trade-offs are acknowledged when relevant.
 
-  return merged;
-}
+Ordinary single-function improvement:
+Check whether the function has a clear purpose, point of difference and adequate
+development.
 
-export function applyScoreCaps(evaluation, scoreCaps = {}) {
-  if (!evaluation || typeof evaluation !== 'object') return evaluation;
+Interactive design:
+Check trigger, user action, product response and user control only when the
+interaction is central.
 
-  const scores = evaluation.scores || {};
-  const usefulnessKey = scores.usefulness_score !== undefined ? 'usefulness_score' : 'quality_score';
+Smart or electronic design:
+Check input, judgment, output, control, power, privacy or maintenance only when
+they are relevant.
 
-  if (typeof scoreCaps.overallMax === 'number') {
-    scores.overall_score = Math.min(scores.overall_score ?? scoreCaps.overallMax, scoreCaps.overallMax);
-  }
+Interdependent multi-function system:
+Check coordination only when the participant explicitly presents functions that
+depend on one another.
 
-  const usefulnessMax = scoreCaps.usefulnessMax ?? scoreCaps.qualityMax;
-  if (typeof usefulnessMax === 'number') {
-    scores[usefulnessKey] = Math.min(scores[usefulnessKey] ?? usefulnessMax, usefulnessMax);
-    scores.quality_score = scores[usefulnessKey];
-    scores.usefulness_score = scores[usefulnessKey];
-  }
+Do not apply interaction-flow criteria to material, appearance, structural,
+safety, storage or other non-sequential proposals unless the response itself
+makes sequential interaction central.
+`;
 
-  if (typeof scoreCaps.elaborationMax === 'number') {
-    scores.elaboration_score = Math.min(scores.elaboration_score ?? scoreCaps.elaborationMax, scoreCaps.elaborationMax);
-  }
+export const scoringGuardrails = `
+FIXED SCORING GUARDRAILS
 
-  if (typeof scoreCaps.originalityMax === 'number') {
-    scores.originality_score = Math.min(scores.originality_score ?? scoreCaps.originalityMax, scoreCaps.originalityMax);
-  }
-
-  evaluation.scores = scores;
-
-  const stageCaps = {
-    Clarify: scoreCaps.clarifyMax,
-    Ideate: scoreCaps.ideateMax,
-    Develop: scoreCaps.developMax,
-    Implement: scoreCaps.implementMax
-  };
-
-  if (Array.isArray(evaluation.cps_structure)) {
-    evaluation.cps_structure = evaluation.cps_structure.map((row) => {
-      const cap = stageCaps[row.stage];
-      if (typeof cap === 'number') {
-        return { ...row, stage_score: Math.min(row.stage_score ?? cap, cap) };
-      }
-      return row;
-    });
-  }
-
-  return evaluation;
-}
+1. Score the evidence presented, not the evaluator's imagined improved version.
+2. Presence is not adequacy: naming a material, sensor, structure or function
+   does not prove that its operation has been explained.
+3. A common idea may receive high usefulness but moderate originality.
+4. An unusual idea may receive high originality but limited usefulness.
+5. Detailed wording is not automatically substantive elaboration.
+6. Multiple related details are not automatically multiple creative categories.
+7. Ideate 4 requires genuine conceptual alternatives.
+8. Originality 5 requires a clearly identifiable point of difference.
+9. Originality 6-7 requires strong evidence of rarity or surprise.
+10. Develop 4 requires the central property, relationship or mechanism to be
+    understandable for the relevant proposal type.
+11. Implement 4 requires a clear final proposal and relevant implementation
+    awareness, but not professional documentation.
+12. Elaboration 6-7 requires the central operation or property to be substantially
+    explained.
+13. Overall 5 requires strong evidence across at least two dimensions.
+14. Overall 6 is reserved for exceptional responses.
+15. Claims of safety, effectiveness, testing, compliance or market value remain
+    unverified unless evidence is provided.
+16. Do not use a complete user experience or interaction loop as a universal
+    high-score requirement.
+`;
