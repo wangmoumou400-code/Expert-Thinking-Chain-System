@@ -1,9 +1,18 @@
 const STAGE_NAMES = {
-  Clarify: 'Clarify 澄清问题',
-  Ideate: 'Ideate 生成想法',
-  Develop: 'Develop 发展方案',
-  Implement: 'Implement 形成方案'
+  Clarify: '1. 明确问题与目标',
+  Ideate: '2. 提出多种想法',
+  Develop: '3. 形成并发展方案',
+  Implement: '4. 完善最终方案'
 };
+
+const PARTICIPANT_TERM_REPLACEMENTS = [
+  [/\bClarify\b/gi, '明确问题与目标'],
+  [/\bIdeate\b/gi, '提出多种想法'],
+  [/\bDevelop\b/gi, '形成并发展方案'],
+  [/\bImplement\b/gi, '完善最终方案'],
+  [/CPS\s*阶段/gi, '四个阶段'],
+  [/\bCPS\b/gi, '四阶段']
+];
 
 function cleanScore(score) {
   if (
@@ -22,10 +31,20 @@ function cleanText(
   text,
   fallback = '未呈现'
 ) {
-  const cleaned = String(text || '')
+  let cleaned = String(text || '')
     .replace(/\s+/g, ' ')
     .replace(/。{2,}/g, '。')
     .trim();
+
+  for (
+    const [pattern, replacement]
+    of PARTICIPANT_TERM_REPLACEMENTS
+  ) {
+    cleaned = cleaned.replace(
+      pattern,
+      replacement
+    );
+  }
 
   return cleaned || fallback;
 }
@@ -57,7 +76,7 @@ function scoreLines(evaluation) {
   ].join('\n');
 }
 
-function cpsLines(evaluation) {
+function stageLines(evaluation) {
   const rows = Array.isArray(
     evaluation?.cps_structure
   )
@@ -68,8 +87,7 @@ function cpsLines(evaluation) {
     .map((row) => {
       const stage =
         STAGE_NAMES[row.stage] ||
-        row.stage ||
-        'CPS阶段';
+        '阶段';
 
       const score = cleanScore(
         row.stage_score
@@ -92,10 +110,10 @@ function cpsLines(evaluation) {
     .join('\n\n');
 }
 
-function cmcParagraph(evaluation) {
+function overallComment(evaluation) {
   return cleanText(
     evaluation?.cmc_overall_comment,
-    '当前未生成专家创造力元认知示范。'
+    '当前未生成总体评语。'
   );
 }
 
@@ -106,8 +124,8 @@ function commonStructuredFeedback(
     '【结构化评价结果】',
     scoreLines(evaluation),
     '',
-    '【CPS阶段评价】',
-    cpsLines(evaluation),
+    '【阶段评分反馈】',
+    stageLines(evaluation),
     '',
     '【总体评价】',
     cleanText(
@@ -146,11 +164,12 @@ export function renderFeedback(
   }
 
   if (
-    condition === 'cmc_reasoning_feedback'
+    condition ===
+    'cmc_reasoning_feedback'
   ) {
     return [
-      '【专家创造力元认知示范】',
-      cmcParagraph(evaluation),
+      '【总体评语】',
+      overallComment(evaluation),
       '',
       commonStructuredFeedback(
         evaluation
